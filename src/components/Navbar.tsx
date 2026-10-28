@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-const links = [{ href: "/movies", label: "Catálogo" }];
+const links = [
+  { href: "/movies", label: "Catálogo" },
+  { href: "/users", label: "Usuarios" },
+];
 
 export default function Navbar() {
   return (

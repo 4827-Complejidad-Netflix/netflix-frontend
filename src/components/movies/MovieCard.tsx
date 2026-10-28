@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Movie } from "@/lib/api";
 
 // Sin API de pósters todavía: cada película recibe un degradado estable derivado de su id.
@@ -6,7 +7,13 @@ function posterGradient(id: number): string {
   return `linear-gradient(160deg, hsl(${hue} 45% 30%), hsl(${(hue + 40) % 360} 50% 9%))`;
 }
 
-export default function MovieCard({ movie }: { movie: Movie }) {
+interface Props {
+  movie: Movie;
+  /** Sustituye la línea de valoraciones positivas (p. ej. score de recomendación o rating del usuario). */
+  detail?: ReactNode;
+}
+
+export default function MovieCard({ movie, detail }: Props) {
   return (
     <article className="group flex flex-col gap-2">
       <div
@@ -19,7 +26,11 @@ export default function MovieCard({ movie }: { movie: Movie }) {
       <div className="flex flex-col gap-1 px-0.5">
         <p className="line-clamp-1 text-xs text-muted">{movie.genres.join(" · ") || "Sin género"}</p>
         <p className="text-xs text-foreground/70">
-          <span className="text-brand">♥</span> {movie.positive_ratings.toLocaleString("es")} valoraciones positivas
+          {detail ?? (
+            <>
+              <span className="text-brand">♥</span> {movie.positive_ratings.toLocaleString("es")} valoraciones positivas
+            </>
+          )}
         </p>
       </div>
     </article>

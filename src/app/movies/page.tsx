@@ -74,7 +74,7 @@ async function MovieResults({ filters }: { filters: Filters }) {
       <p className="text-sm text-muted">
         {data.total.toLocaleString("es")} películas · página {filters.page} de {totalPages}
       </p>
-      <MovieGrid movies={data.items} />
+      <MovieGrid items={data.items} movie={(m) => m} />
       <Pagination page={filters.page} totalPages={totalPages} hrefFor={(p) => catalogHref(filters, p)} />
     </div>
   );

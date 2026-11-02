@@ -3,6 +3,8 @@ import Link from "next/link";
 const links = [
   { href: "/movies", label: "Catálogo" },
   { href: "/users", label: "Usuarios" },
+  { href: "/graph", label: "Grafo" },
+  { href: "/graph/communities", label: "Comunidades" },
 ];
 
 export default function Navbar() {

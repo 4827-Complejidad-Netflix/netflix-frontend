@@ -87,7 +87,7 @@ async function Catalog({ searchParams }: Pick<PageProps<"/movies">, "searchParam
   return (
     <>
       <CatalogFilters genres={genres} q={filters.q} genre={filters.genre} sort={filters.sort} />
-      {/* La key reinicia el Suspense en cada cambio de filtro para mostrar el skeleton. */}
+       
       <Suspense key={catalogHref(filters, filters.page)} fallback={<MovieGridSkeleton />}>
         <MovieResults filters={filters} />
       </Suspense>
@@ -95,8 +95,7 @@ async function Catalog({ searchParams }: Pick<PageProps<"/movies">, "searchParam
   );
 }
 
-// Con Cache Components, todo lo que lee searchParams o llama a la API va dentro de <Suspense>;
-// el resto (título) forma parte del shell estático.
+ 
 export default function MoviesPage({ searchParams }: PageProps<"/movies">) {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-8">

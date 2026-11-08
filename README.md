@@ -66,11 +66,11 @@ Copia el archivo de ejemplo y ajusta la URL del backend:
 cp .env.example .env.local
 ```
 
-| Variable              | Descripción                          | Valor por defecto           |
-|-----------------------|--------------------------------------|-----------------------------|
-| `NEXT_PUBLIC_API_URL` | URL base de la API de netflix-backend | `http://localhost:8000/api` |
+| Variable  | Descripción                           | Valor por defecto           |
+|-----------|---------------------------------------|-----------------------------|
+| `API_URL` | URL base de la API de netflix-backend | `http://localhost:8000/api` |
 
-> Las variables `NEXT_PUBLIC_*` se incrustan en el código **al compilar**. Si cambias su valor, tienes que volver a ejecutar `npm run build` (o redesplegar).
+> `API_URL` no lleva el prefijo `NEXT_PUBLIC_` a propósito: solo la usa el servidor, así que no se expone al navegador. Por lo mismo, el cliente de `src/lib/api` no debe llamarse desde Client Components.
 
 ## Primeros pasos
 
@@ -99,14 +99,14 @@ El proyecto es una app Next.js estándar y se puede desplegar en [Vercel](https:
 
 1. Despliega primero netflix-backend en una URL pública. La instancia actual está en Render: `https://netflix-backend-bdlf.onrender.com` (documentación en `/docs`).
 2. Importa este repositorio en Vercel.
-3. En *Settings → Environment Variables*, define `NEXT_PUBLIC_API_URL` con la URL pública del backend **incluyendo `/api`**: `https://netflix-backend-bdlf.onrender.com/api`.
-4. Despliega. Si más adelante cambias la URL, vuelve a desplegar para que tome efecto.
+3. En *Settings → Environment Variables*, define `API_URL` con la URL pública del backend **incluyendo `/api`**: `https://netflix-backend-bdlf.onrender.com/api`.
+4. Despliega. En Vercel, los cambios de variables de entorno solo se aplican en despliegues nuevos: si cambias la URL, vuelve a desplegar.
 
 Para desplegar en un servidor propio:
 
 ```bash
-NEXT_PUBLIC_API_URL=https://mi-backend.example.com/api npm run build
-npm run start   # escucha en el puerto 3000 (configurable con PORT)
+npm run build
+API_URL=https://mi-backend.example.com/api npm run start   # escucha en el puerto 3000 (configurable con PORT)
 ```
 
 El servidor del frontend debe poder alcanzar al backend, porque es el que hace las peticiones.

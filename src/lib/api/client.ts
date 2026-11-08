@@ -12,7 +12,7 @@ import type {
   User,
 } from "./types";
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api").replace(/\/+$/, "");
+const API_URL = (process.env.API_URL ?? "http://localhost:8000/api").replace(/\/+$/, "");
 
 type QueryParams = Record<string, string | number | undefined | null>;
 
@@ -57,7 +57,7 @@ async function request<T>(path: string, params?: QueryParams, init?: RequestInit
   return res.json() as Promise<T>;
 }
 
-/** Cliente de netflix-backend. Funciona en Server y Client Components; `init` se pasa a `fetch` (p. ej. `signal`). */
+/** Cliente de netflix-backend. Solo para el servidor: `API_URL` no lleva prefijo `NEXT_PUBLIC_`, así que no llega al navegador. `init` se pasa a `fetch`. */
 export const api = {
   movies: {
     list: (params?: MovieListParams, init?: RequestInit) =>

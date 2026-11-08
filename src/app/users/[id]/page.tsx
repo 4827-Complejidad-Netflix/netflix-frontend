@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import ErrorState from "@/components/ErrorState";
+import BfsTree, { BfsTreeSkeleton } from "@/components/graph/BfsTree";
 import MovieGrid, { MovieGridSkeleton } from "@/components/movies/MovieGrid";
-import { api, type Recommendation, type User } from "@/lib/api";
+import { api, type Graph, type Recommendation, type User } from "@/lib/api";
 
 const LIKED_LIMIT = 24;
 const RECOMMENDATIONS_LIMIT = 12;
+// Hijos por nodo en el árbol BFS (el backend admite 1–5). Con 3 niveles salen 1 + 3 + 9 + 27 = 40 nodos.
+const BFS_BRANCHING = 3;
 
 type Params = PageProps<"/users/[id]">["params"];
 
@@ -83,6 +86,24 @@ async function Recommendations({ params }: { params: Params }) {
   );
 }
 
+async function BfsTreeSection({ params }: { params: Params }) {
+  const id = parseId((await params).id);
+  if (id === null) return null;
+
+  let graph: Graph;
+  try {
+    graph = await api.users.bfs(id, { depth: 3, branching: BFS_BRANCHING });
+  } catch (error) {
+    return <ErrorState error={error} title="No se pudo cargar el árbol BFS" />;
+  }
+
+  if (graph.nodes.length <= 1) {
+    return <p className="text-sm text-muted">Este usuario no tiene valoraciones positivas desde las que recorrer el grafo.</p>;
+  }
+
+  return <BfsTree graph={graph} />;
+}
+
 async function LikedMovies({ params }: { params: Params }) {
   const id = parseId((await params).id);
   if (id === null) return <p className="text-sm text-muted">El ID de usuario debe ser un número.</p>;
@@ -115,7 +136,7 @@ async function LikedMovies({ params }: { params: Params }) {
 }
 
 // Sin generateStaticParams el id es dato de ejecución: cada parte que lo lee va en su propio <Suspense>
-// para que el perfil, las recomendaciones y las favoritas se carguen en paralelo.
+// para que el perfil, las recomendaciones, el árbol BFS y las favoritas se carguen en paralelo.
 export default function UserPage({ params }: PageProps<"/users/[id]">) {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-8 sm:px-8">
@@ -129,6 +150,15 @@ export default function UserPage({ params }: PageProps<"/users/[id]">) {
       >
         <Suspense fallback={<MovieGridSkeleton count={RECOMMENDATIONS_LIMIT} />}>
           <Recommendations params={params} />
+        </Suspense>
+      </Section>
+
+      <Section
+        title="Árbol BFS"
+        subtitle={`Recorrido que genera las recomendaciones, limitado a ${BFS_BRANCHING} ramas por nodo para que se pueda leer.`}
+      >
+        <Suspense fallback={<BfsTreeSkeleton />}>
+          <BfsTreeSection params={params} />
         </Suspense>
       </Section>
 

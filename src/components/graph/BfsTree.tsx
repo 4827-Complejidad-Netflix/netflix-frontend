@@ -61,9 +61,9 @@ function treeLayout(graph: Graph): { positions: Record<string, Position>; leaves
   return { positions, leaves: Math.max(leaves, 1) };
 }
 
-/** Alto del lienzo según el número de hojas, entre 320 y 720 px. */
+/** Alto del lienzo según el número de hojas, entre 320 y 1000 px (27 hojas caben enteras con zoom ≥ 0.75). */
 export function treeHeight(graph: Graph): number {
-  return Math.min(720, Math.max(320, treeLayout(graph).leaves * ROW_GAP + 60));
+  return Math.min(1000, Math.max(320, treeLayout(graph).leaves * ROW_GAP + 60));
 }
 
 export default function BfsTree({ graph }: { graph: Graph }) {

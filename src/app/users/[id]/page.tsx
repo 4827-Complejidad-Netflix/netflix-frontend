@@ -47,7 +47,7 @@ async function ProfileHeader({ params }: { params: Params }) {
         </Link>{" "}
         / perfil
       </p>
-      <h1 className="mt-1 text-3xl font-bold">Usuario {id ?? "—"}</h1>
+      <h1 className="mt-1 text-3xl font-bold tracking-tight">Usuario {id ?? "—"}</h1>
       {user && (
         <p className="mt-1 text-sm text-muted">
           {user.positive_ratings.toLocaleString("es")} películas valoradas positivamente
@@ -78,7 +78,7 @@ async function Recommendations({ params }: { params: Params }) {
       movie={(r) => r.movie}
       detail={(r) => (
         <>
-          <span className="font-semibold text-brand">{r.score}</span>{" "}
+          <span className="font-semibold text-accent">{r.score}</span>{" "}
           {r.score === 1 ? "usuario similar la valoró" : "usuarios similares la valoraron"}
         </>
       )}
@@ -127,7 +127,7 @@ async function LikedMovies({ params }: { params: Params }) {
         movie={(r) => r.movie}
         detail={(r) => (
           <>
-            <span className="text-yellow-400">★</span> {r.rating.toFixed(1)}
+            <span className="text-gold">★</span> {r.rating.toFixed(1)}
           </>
         )}
       />

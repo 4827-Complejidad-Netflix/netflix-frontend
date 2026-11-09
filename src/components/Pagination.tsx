@@ -18,7 +18,7 @@ export default function Pagination({ page, totalPages, hrefFor }: Props) {
   if (totalPages <= 1) return null;
 
   const base = "flex h-9 min-w-9 items-center justify-center rounded-md px-3 text-sm transition-colors";
-  const idle = `${base} bg-surface hover:bg-white/10`;
+  const idle = `${base} bg-surface ring-1 ring-border hover:bg-surface-hover`;
   const disabled = `${base} bg-surface text-muted opacity-50`;
 
   return (
@@ -40,7 +40,7 @@ export default function Pagination({ page, totalPages, hrefFor }: Props) {
             key={p}
             href={hrefFor(p)}
             aria-current={p === page ? "page" : undefined}
-            className={p === page ? `${base} bg-brand font-semibold text-white` : idle}
+            className={p === page ? `${base} bg-brand-gradient font-semibold text-white` : idle}
           >
             {p}
           </Link>

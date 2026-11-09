@@ -69,7 +69,7 @@ async function Results({ query }: { query: CommunityQuery }) {
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {result.summary.map((s) => (
-          <div key={s.label} className="flex flex-col gap-1 rounded-md bg-surface px-5 py-4">
+          <div key={s.label} className="flex flex-col gap-1 rounded-xl border border-border bg-surface px-5 py-4">
             <span className="text-sm text-muted">{s.label}</span>
             <span className="text-2xl font-bold tabular-nums">{s.value}</span>
           </div>
@@ -80,13 +80,13 @@ async function Results({ query }: { query: CommunityQuery }) {
 
       <ul className="flex flex-wrap gap-2 text-xs" aria-label="Leyenda">
         {result.communities.map((c) => (
-          <li key={c.id} className="flex items-center gap-2 rounded bg-surface px-2 py-1">
+          <li key={c.id} className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1">
             <span className="size-3 rounded-full" style={{ background: communityColor(c.id) }} />
             Comunidad {c.id + 1} · {c.users.length} usuarios
           </li>
         ))}
         {result.isolated.length > 0 && (
-          <li className="flex items-center gap-2 rounded bg-surface px-2 py-1">
+          <li className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1">
             <span className="size-3 rounded-full" style={{ background: communityColor(-1) }} />
             Sin comunidad · {result.isolated.length}
           </li>
@@ -117,7 +117,7 @@ export default function CommunitiesPage({ searchParams }: PageProps<"/graph/comm
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-8">
       <div>
-        <h1 className="text-3xl font-bold">Comunidades de gusto</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Comunidades de gusto</h1>
         <p className="mt-1 text-sm text-muted">
           Proyección usuario–usuario G_U sobre una muestra de usuarios con 20 a 300 valoraciones positivas. La misma
           semilla siempre produce la misma muestra.

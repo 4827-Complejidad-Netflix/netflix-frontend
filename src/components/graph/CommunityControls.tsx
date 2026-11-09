@@ -29,7 +29,7 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
   }
 
   const field =
-    "h-10 rounded-md border border-white/10 bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-white/40";
+    "h-10 rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/25";
   const button = "h-10 rounded-md px-4 text-sm font-semibold transition-colors disabled:opacity-50";
 
   return (
@@ -43,7 +43,7 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
             aria-selected={query.method === m.value}
             disabled={isPending}
             onClick={() => go({ method: m.value })}
-            className={`${button} ${query.method === m.value ? "bg-brand text-white" : "bg-surface hover:bg-white/10"}`}
+            className={`${button} ${query.method === m.value ? "bg-brand-gradient text-white shadow-lg shadow-brand/20" : "bg-surface ring-1 ring-border hover:bg-surface-hover"}`}
           >
             {m.label}
           </button>
@@ -94,14 +94,14 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
           Semilla
           <input type="number" value={seed} onChange={(e) => setSeed(e.target.value)} className={`${field} lg:w-32`} />
         </label>
-        <button type="submit" disabled={isPending} className={`${button} bg-brand text-white hover:bg-brand/85`}>
+        <button type="submit" disabled={isPending} className={`${button} bg-brand-gradient text-white shadow-lg shadow-brand/20 hover:brightness-110`}>
           {isPending ? "Calculando…" : "Aplicar"}
         </button>
         <button
           type="button"
           disabled={isPending}
           onClick={() => go({ seed: Math.floor(Math.random() * 10_000) })}
-          className={`${button} bg-surface hover:bg-white/10`}
+          className={`${button} bg-surface ring-1 ring-border hover:bg-surface-hover`}
         >
           Nueva muestra
         </button>

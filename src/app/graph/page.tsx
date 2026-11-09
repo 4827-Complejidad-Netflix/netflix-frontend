@@ -26,7 +26,7 @@ function toStats(s: GraphStats): Stat[] {
 
 function StatCard({ label, value, hint }: Stat) {
   return (
-    <div className="flex flex-col gap-1 rounded-md bg-surface px-5 py-4">
+    <div className="flex flex-col gap-1 rounded-xl border border-border bg-surface px-5 py-4">
       <span className="text-sm text-muted">{label}</span>
       <span className="text-3xl font-bold tabular-nums">{value}</span>
       <span className="text-xs text-muted">{hint}</span>
@@ -75,7 +75,7 @@ export default function GraphPage() {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-8">
       <div>
-        <h1 className="text-3xl font-bold">Grafo G_B</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Grafo G_B</h1>
         <p className="mt-1 text-sm text-muted">
           Grafo bipartito usuario–película de MovieLens ml-latest-small. Cada arista es una valoración positiva.
         </p>

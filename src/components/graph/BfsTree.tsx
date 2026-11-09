@@ -7,7 +7,7 @@ import type { Graph, GraphNode } from "@/lib/api";
 
 // Un color por nivel del BFS, igual que la figura del árbol en el informe.
 const LEVELS = [
-  { color: "#e50914", text: "#ffffff", label: "Nivel 0 · usuario origen" },
+  { color: "#7c5cff", text: "#ffffff", label: "Nivel 0 · usuario origen" },
   { color: "#f5a524", text: "#1a1a1a", label: "Nivel 1 · películas que le gustaron" },
   { color: "#4e9cf5", text: "#ffffff", label: "Nivel 2 · usuarios con gustos similares" },
   { color: "#3ccf91", text: "#1a1a1a", label: "Nivel 3 · películas candidatas" },
@@ -113,8 +113,8 @@ export default function BfsTree({ graph }: { graph: Graph }) {
             selector: "edge",
             style: {
               width: 1.5,
-              "line-color": "#6b6b6b",
-              "target-arrow-color": "#6b6b6b",
+              "line-color": "#3d4566",
+              "target-arrow-color": "#3d4566",
               "target-arrow-shape": "triangle",
               "curve-style": "bezier",
             },
@@ -165,7 +165,7 @@ export default function BfsTree({ graph }: { graph: Graph }) {
     <div className="flex flex-col gap-3">
       <ul className="flex flex-wrap gap-2 text-xs" aria-label="Leyenda">
         {LEVELS.map((l) => (
-          <li key={l.label} className="flex items-center gap-2 rounded bg-surface px-2 py-1">
+          <li key={l.label} className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1">
             <span className="size-3 rounded-full" style={{ background: l.color }} />
             {l.label}
           </li>
@@ -174,7 +174,7 @@ export default function BfsTree({ graph }: { graph: Graph }) {
       <div
         ref={containerRef}
         style={{ height: treeHeight(graph) }}
-        className="w-full rounded-md bg-surface"
+        className="w-full rounded-xl border border-border bg-surface"
         aria-label="Árbol BFS"
       />
       <div className="min-h-6 text-sm text-muted">
@@ -205,7 +205,7 @@ function SelectionInfo({ node, parentLabel, rating }: Selected) {
         <>
           {" "}
           ·{" "}
-          <Link href={`/users/${node.ref}`} className="text-brand hover:underline">
+          <Link href={`/users/${node.ref}`} className="text-accent hover:underline">
             ver su perfil
           </Link>
         </>

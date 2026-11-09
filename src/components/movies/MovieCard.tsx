@@ -4,7 +4,7 @@ import type { Movie } from "@/lib/api";
 // Sin API de pósters todavía: cada película recibe un degradado estable derivado de su id.
 function posterGradient(id: number): string {
   const hue = (id * 47) % 360;
-  return `linear-gradient(160deg, hsl(${hue} 45% 30%), hsl(${(hue + 40) % 360} 50% 9%))`;
+  return `linear-gradient(160deg, hsl(${hue} 55% 34%), hsl(${(hue + 50) % 360} 45% 10%))`;
 }
 
 interface Props {
@@ -17,7 +17,7 @@ export default function MovieCard({ movie, detail }: Props) {
   return (
     <article className="group flex flex-col gap-2">
       <div
-        className="relative flex aspect-[2/3] flex-col justify-end overflow-hidden rounded-md p-3 shadow-lg ring-1 ring-white/5 transition-transform duration-200 group-hover:scale-[1.03]"
+        className="relative flex aspect-[2/3] flex-col justify-end overflow-hidden rounded-md p-3 shadow-lg ring-1 ring-white/10 transition duration-200 group-hover:-translate-y-1 group-hover:shadow-brand/25 group-hover:ring-brand/60"
         style={{ background: posterGradient(movie.id) }}
       >
         <h3 className="line-clamp-4 text-base font-bold leading-tight text-white drop-shadow">{movie.title}</h3>
@@ -28,7 +28,7 @@ export default function MovieCard({ movie, detail }: Props) {
         <p className="text-xs text-foreground/70">
           {detail ?? (
             <>
-              <span className="text-brand">♥</span> {movie.positive_ratings.toLocaleString("es")} valoraciones positivas
+              <span className="text-danger">♥</span> {movie.positive_ratings.toLocaleString("es")} valoraciones positivas
             </>
           )}
         </p>

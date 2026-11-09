@@ -1,28 +1,19 @@
 import Link from "next/link";
-
-const links = [
-  { href: "/movies", label: "Catálogo" },
-  { href: "/users", label: "Usuarios" },
-  { href: "/graph", label: "Grafo" },
-  { href: "/graph/communities", label: "Comunidades" },
-];
+import { Suspense } from "react";
+import Logo from "./Logo";
+import NavLinks, { NavLinkList } from "./NavLinks";
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-20 border-b border-white/5 bg-background/90 backdrop-blur">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center gap-8 px-4 sm:px-8">
-        <Link href="/" className="text-2xl font-black tracking-tight text-brand">
-          NETFLIX<span className="ml-1 text-sm font-semibold text-muted">graph</span>
+    <header className="sticky top-0 z-20 border-b border-border/70 bg-background/75 backdrop-blur-md">
+      <nav className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:gap-10 sm:px-8">
+        <Link href="/" aria-label="Inicio" className="shrink-0">
+          <Logo />
         </Link>
-        <ul className="flex gap-6 text-sm">
-          {links.map((link) => (
-            <li key={link.href}>
-              <Link href={link.href} className="text-foreground/80 transition-colors hover:text-foreground">
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {/* usePathname es dato de ejecución: el fallback permite prerenderizar la barra sin estado activo. */}
+        <Suspense fallback={<NavLinkList />}>
+          <NavLinks />
+        </Suspense>
       </nav>
     </header>
   );

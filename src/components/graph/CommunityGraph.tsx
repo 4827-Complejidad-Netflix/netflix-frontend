@@ -51,7 +51,7 @@ export default function CommunityGraph({ graph }: { graph: Graph }) {
             style: {
               "background-color": "data(color)",
               label: "data(label)",
-              color: "#e5e5e5",
+              color: "#e8eaf4",
               "font-size": 9,
               "text-valign": "bottom",
               "text-margin-y": 3,
@@ -65,7 +65,7 @@ export default function CommunityGraph({ graph }: { graph: Graph }) {
             style: {
               // Grosor proporcional a la similitud de Jaccard.
               width: (ele: EdgeSingular) => 0.8 + (3.5 * ((ele.data("weight") as number) - minW)) / range,
-              "line-color": "#6b6b6b",
+              "line-color": "#3d4566",
               opacity: 0.55,
               "curve-style": "haystack",
             },
@@ -111,14 +111,14 @@ export default function CommunityGraph({ graph }: { graph: Graph }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div ref={containerRef} className="h-[520px] w-full rounded-md bg-surface" aria-label="Grafo de comunidades" />
+      <div ref={containerRef} className="h-[520px] w-full rounded-xl border border-border bg-surface" aria-label="Grafo de comunidades" />
       <div className="min-h-6 text-sm text-muted">
         {selected ? (
           <>
             <span className="font-semibold text-foreground">Usuario {selected.ref}</span> ·{" "}
             {selected.community < 0 ? "sin comunidad" : `comunidad ${selected.community + 1}`} · {selected.degree}{" "}
             {selected.degree === 1 ? "conexión" : "conexiones"} ·{" "}
-            <Link href={`/users/${selected.ref}`} className="text-brand hover:underline">
+            <Link href={`/users/${selected.ref}`} className="text-accent hover:underline">
               ver sus recomendaciones
             </Link>
           </>

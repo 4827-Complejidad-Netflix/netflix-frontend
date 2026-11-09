@@ -9,7 +9,7 @@ Frontend del proyecto Netflix, construido con [Next.js](https://nextjs.org). Con
 | `/`                  | Redirige a `/movies`                                                                                     |
 | `/movies`            | Catálogo con búsqueda por título, filtro por género, orden (popular, título, año) y paginación           |
 | `/users`             | Listado de usuarios con valoraciones positivas y buscador por ID                                         |
-| `/users/[id]`        | Perfil del usuario: películas que le gustaron y recomendaciones calculadas con BFS sobre el grafo        |
+| `/users/[id]`        | Perfil del usuario: recomendaciones calculadas con BFS sobre el grafo, el árbol BFS interactivo que las genera y las películas que le gustaron |
 | `/graph`             | Estadísticas del grafo: nodos, aristas, densidad y grado medio                                           |
 | `/graph/communities` | Detección de comunidades sobre una muestra de usuarios, con UFDS (umbral de Jaccard) o Kruskal (k grupos), visualizada con Cytoscape |
 
@@ -32,11 +32,13 @@ netflix-frontend/
 ├── src/
 │   ├── app/                  # Rutas (App Router)
 │   │   ├── layout.tsx        # Layout raíz con la barra de navegación
+│   │   ├── globals.css       # Tema (tokens de color de Tailwind)
+│   │   ├── icon.svg          # Ícono de la pestaña
 │   │   ├── page.tsx          # Redirección a /movies
 │   │   ├── movies/           # Catálogo
 │   │   ├── users/            # Listado y perfil de usuarios
 │   │   └── graph/            # Estadísticas y comunidades
-│   ├── components/           # Componentes de UI (movies/, users/, graph/ y compartidos)
+│   ├── components/           # Componentes de UI (movies/, users/, graph/ y compartidos como Navbar y Logo)
 │   └── lib/
 │       ├── api/              # Cliente tipado de netflix-backend (client.ts, types.ts)
 │       └── communities.ts    # Colores y parámetros de la vista de comunidades
@@ -44,6 +46,14 @@ netflix-frontend/
 ├── next.config.ts            # Configuración de Next.js
 └── tsconfig.json             # Configuración de TypeScript (alias @/* → src/*)
 ```
+
+## Interfaz
+
+- **Tema oscuro monocromo**: fondo negro, superficies gris casi negro y acciones principales en blanco. Los colores se definen como tokens en `src/app/globals.css` (`background`, `foreground`, `surface`, `border`, `muted`, `danger`, `gold`) y se usan como clases de Tailwind (`bg-surface`, `text-muted`…), así que basta con cambiarlos ahí para ajustar toda la app.
+- **Color solo donde aporta información**: los niveles del árbol BFS y las comunidades conservan colores distintos para poder diferenciarlos; el resto de la interfaz es en blanco y negro.
+- **Identidad propia**: el logo (`src/components/Logo.tsx`, mismo dibujo que `src/app/icon.svg`) es una insignia con un pequeño grafo usuario–película y el texto *netflix graph* en minúsculas. No usa el logotipo ni los colores de Netflix.
+- **Pósters generados**: como aún no hay API de pósters, cada película recibe un degradado oscuro estable derivado de su id.
+- La barra de navegación resalta la sección activa (`src/components/NavLinks.tsx`, envuelto en `<Suspense>` porque la ruta actual solo se conoce en ejecución).
 
 ## Decisiones de diseño
 

@@ -21,25 +21,40 @@ async function fetchPosterPath(tmdbId: number): Promise<string | null> {
   "use cache";
   cacheLife("weeks");
 
-  const key = process.env.TMDB_API_KEY;
+  // Tolera espacios o comillas pegados por error al definir la variable en el hosting.
+  const key = process.env.TMDB_API_KEY?.trim().replace(/^["']|["']$/g, "");
   if (!key) return null;
 
   const url = new URL(`${API_BASE}/movie/${tmdbId}`);
   const res = await fetch(url, { headers: authorize(url, key) });
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`TMDB respondió ${res.status} para la película ${tmdbId}`);
+  if (res.status === 401) throw new Error("TMDB rechazó TMDB_API_KEY (401): revisa que el valor sea correcto.");
+  if (!res.ok) throw new Error(`TMDB respondió ${res.status} para la película ${tmdbId}.`);
 
   const data: { poster_path?: string | null } = await res.json();
   return data.poster_path ?? null;
 }
 
+// Un aviso por proceso basta para diagnosticar en los logs (p. ej. Vercel → Logs) sin repetirlo por cada tarjeta.
+let warned = false;
+function warnOnce(message: string) {
+  if (warned) return;
+  warned = true;
+  console.warn(`[tmdb] ${message} Se muestran los degradados en lugar de los pósters.`);
+}
+
 /** URL del póster o null si no hay clave, la película no está en TMDB o la petición falla. */
 export async function posterUrl(tmdbId: number | null): Promise<string | null> {
-  if (tmdbId === null || !process.env.TMDB_API_KEY) return null;
+  if (tmdbId === null) return null;
+  if (!process.env.TMDB_API_KEY?.trim()) {
+    warnOnce("TMDB_API_KEY no está definida en este entorno.");
+    return null;
+  }
   try {
     const path = await fetchPosterPath(tmdbId);
     return path ? `${IMAGE_BASE}${path}` : null;
-  } catch {
+  } catch (error) {
+    warnOnce(error instanceof Error ? error.message : String(error));
     return null;
   }
 }

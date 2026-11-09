@@ -40,7 +40,7 @@ export default function Pagination({ page, totalPages, hrefFor }: Props) {
             key={p}
             href={hrefFor(p)}
             aria-current={p === page ? "page" : undefined}
-            className={p === page ? `${base} bg-brand-gradient font-semibold text-white` : idle}
+            className={p === page ? `${base} bg-foreground font-semibold text-background` : idle}
           >
             {p}
           </Link>

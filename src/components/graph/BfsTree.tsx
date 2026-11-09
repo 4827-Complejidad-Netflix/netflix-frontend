@@ -7,7 +7,7 @@ import type { Graph, GraphNode } from "@/lib/api";
 
 // Un color por nivel del BFS, igual que la figura del árbol en el informe.
 const LEVELS = [
-  { color: "#7c5cff", text: "#ffffff", label: "Nivel 0 · usuario origen" },
+  { color: "#ffffff", text: "#000000", label: "Nivel 0 · usuario origen" },
   { color: "#f5a524", text: "#1a1a1a", label: "Nivel 1 · películas que le gustaron" },
   { color: "#4e9cf5", text: "#ffffff", label: "Nivel 2 · usuarios con gustos similares" },
   { color: "#3ccf91", text: "#1a1a1a", label: "Nivel 3 · películas candidatas" },
@@ -113,8 +113,8 @@ export default function BfsTree({ graph }: { graph: Graph }) {
             selector: "edge",
             style: {
               width: 1.5,
-              "line-color": "#3d4566",
-              "target-arrow-color": "#3d4566",
+              "line-color": "#3a3a3a",
+              "target-arrow-color": "#3a3a3a",
               "target-arrow-shape": "triangle",
               "curve-style": "bezier",
             },
@@ -205,7 +205,7 @@ function SelectionInfo({ node, parentLabel, rating }: Selected) {
         <>
           {" "}
           ·{" "}
-          <Link href={`/users/${node.ref}`} className="text-accent hover:underline">
+          <Link href={`/users/${node.ref}`} className="text-foreground underline decoration-muted underline-offset-2 hover:decoration-foreground">
             ver su perfil
           </Link>
         </>

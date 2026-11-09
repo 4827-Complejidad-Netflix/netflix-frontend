@@ -27,7 +27,7 @@ async function Users() {
             <li key={id}>
               <Link
                 href={`/users/${id}`}
-                className="inline-flex h-8 min-w-11 items-center justify-center rounded-md bg-surface px-2 font-mono ring-1 ring-border text-xs text-foreground/80 transition-colors hover:bg-brand hover:text-white hover:ring-brand"
+                className="inline-flex h-8 min-w-11 items-center justify-center rounded-md bg-surface px-2 font-mono ring-1 ring-border text-xs text-foreground/80 transition-colors hover:bg-foreground hover:text-background hover:ring-foreground"
               >
                 {id}
               </Link>

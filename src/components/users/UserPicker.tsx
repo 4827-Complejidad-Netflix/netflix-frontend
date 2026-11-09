@@ -41,9 +41,9 @@ export default function UserPicker({ userIds }: { userIds: number[] }) {
           onChange={(e) => setValue(e.target.value)}
           placeholder={`ID de usuario (${userIds[0]}–${userIds[userIds.length - 1]})`}
           aria-label="ID de usuario"
-          className="h-10 flex-1 rounded-md border border-border bg-surface px-3 text-sm outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/25"
+          className="h-10 flex-1 rounded-md border border-border bg-surface px-3 text-sm outline-none transition-colors focus:border-muted"
         />
-        <button type="submit" disabled={!value || isPending} className={`${button} bg-brand-gradient text-white shadow-lg shadow-brand/20 hover:brightness-110`}>
+        <button type="submit" disabled={!value || isPending} className={`${button} bg-foreground text-background hover:bg-white`}>
           Ver perfil
         </button>
         <button type="button" onClick={random} disabled={isPending} className={`${button} bg-surface ring-1 ring-border hover:bg-surface-hover`}>

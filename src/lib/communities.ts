@@ -9,7 +9,7 @@ const COMMUNITY_COLORS = [
   "#c3d64a", // lima
 ];
 
-export const ISOLATED_COLOR = "#4a5070";
+export const ISOLATED_COLOR = "#4a4a4a";
 
 /** Color de la comunidad `id` (el backend envía -1 para usuarios aislados). */
 export function communityColor(id: number): string {

@@ -51,7 +51,7 @@ export default function CatalogFilters({ genres, q, genre, sort }: Props) {
   }, [search]);
 
   const fieldClass =
-    "h-10 rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/25";
+    "h-10 rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-muted";
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -65,7 +65,7 @@ export default function CatalogFilters({ genres, q, genre, sort }: Props) {
           className={`${fieldClass} w-full`}
         />
         {isPending && (
-          <span className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin rounded-full border-2 border-border border-t-accent" />
+          <span className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin rounded-full border-2 border-border border-t-foreground" />
         )}
       </div>
       <select

@@ -51,7 +51,7 @@ export default function CommunityGraph({ graph }: { graph: Graph }) {
             style: {
               "background-color": "data(color)",
               label: "data(label)",
-              color: "#e8eaf4",
+              color: "#ededed",
               "font-size": 9,
               "text-valign": "bottom",
               "text-margin-y": 3,
@@ -65,7 +65,7 @@ export default function CommunityGraph({ graph }: { graph: Graph }) {
             style: {
               // Grosor proporcional a la similitud de Jaccard.
               width: (ele: EdgeSingular) => 0.8 + (3.5 * ((ele.data("weight") as number) - minW)) / range,
-              "line-color": "#3d4566",
+              "line-color": "#3a3a3a",
               opacity: 0.55,
               "curve-style": "haystack",
             },
@@ -118,7 +118,7 @@ export default function CommunityGraph({ graph }: { graph: Graph }) {
             <span className="font-semibold text-foreground">Usuario {selected.ref}</span> ·{" "}
             {selected.community < 0 ? "sin comunidad" : `comunidad ${selected.community + 1}`} · {selected.degree}{" "}
             {selected.degree === 1 ? "conexión" : "conexiones"} ·{" "}
-            <Link href={`/users/${selected.ref}`} className="text-accent hover:underline">
+            <Link href={`/users/${selected.ref}`} className="text-foreground underline decoration-muted underline-offset-2 hover:decoration-foreground">
               ver sus recomendaciones
             </Link>
           </>

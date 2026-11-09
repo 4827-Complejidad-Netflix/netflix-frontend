@@ -78,7 +78,7 @@ async function Recommendations({ params }: { params: Params }) {
       movie={(r) => r.movie}
       detail={(r) => (
         <>
-          <span className="font-semibold text-accent">{r.score}</span>{" "}
+          <span className="font-semibold text-foreground">{r.score}</span>{" "}
           {r.score === 1 ? "usuario similar la valoró" : "usuarios similares la valoraron"}
         </>
       )}

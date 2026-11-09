@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "CineGraph",
-    template: "%s · CineGraph",
+    default: "Netflix Graph Recommender",
+    template: "%s · Netflix Graph Recommender",
   },
   description: "Sistema de recomendación de películas basado en grafos (MovieLens).",
 };

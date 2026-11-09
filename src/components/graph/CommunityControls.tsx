@@ -29,7 +29,7 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
   }
 
   const field =
-    "h-10 rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/25";
+    "h-10 rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-muted";
   const button = "h-10 rounded-md px-4 text-sm font-semibold transition-colors disabled:opacity-50";
 
   return (
@@ -43,7 +43,7 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
             aria-selected={query.method === m.value}
             disabled={isPending}
             onClick={() => go({ method: m.value })}
-            className={`${button} ${query.method === m.value ? "bg-brand-gradient text-white shadow-lg shadow-brand/20" : "bg-surface ring-1 ring-border hover:bg-surface-hover"}`}
+            className={`${button} ${query.method === m.value ? "bg-foreground text-background" : "bg-surface ring-1 ring-border hover:bg-surface-hover"}`}
           >
             {m.label}
           </button>
@@ -63,7 +63,7 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
               step={0.01}
               value={theta}
               onChange={(e) => setTheta(Number(e.target.value))}
-              className="h-10 accent-brand"
+              className="h-10 accent-white"
             />
           </label>
         ) : (
@@ -94,7 +94,7 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
           Semilla
           <input type="number" value={seed} onChange={(e) => setSeed(e.target.value)} className={`${field} lg:w-32`} />
         </label>
-        <button type="submit" disabled={isPending} className={`${button} bg-brand-gradient text-white shadow-lg shadow-brand/20 hover:brightness-110`}>
+        <button type="submit" disabled={isPending} className={`${button} bg-foreground text-background hover:bg-white`}>
           {isPending ? "Calculando…" : "Aplicar"}
         </button>
         <button

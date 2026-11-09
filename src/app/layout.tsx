@@ -30,6 +30,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <Navbar />
         <main className="flex-1">{children}</main>
+        <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted sm:px-8">
+          Pósters de{" "}
+          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
+            TMDB
+          </a>
+          . This product uses the TMDB API but is not endorsed or certified by TMDB.
+        </footer>
       </body>
     </html>
   );

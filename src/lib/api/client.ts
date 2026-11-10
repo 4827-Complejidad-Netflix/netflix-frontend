@@ -5,6 +5,7 @@ import type {
   GraphStats,
   KruskalCommunities,
   KruskalParams,
+  LikesRecommendations,
   Movie,
   MovieListParams,
   PaginatedMovies,
@@ -74,6 +75,17 @@ export const api = {
       request<Recommendation[]>(`/users/${id}/recommendations`, params, init),
     bfs: (id: number, params?: { depth?: number; branching?: number }, init?: RequestInit) =>
       request<Graph>(`/users/${id}/bfs`, params, init),
+  },
+
+  recommendations: {
+    /** BFS de 3 niveles desde un conjunto de películas con "me gusta" (perfil anónimo). */
+    fromLikes: (liked: number[], params?: { limit?: number }, init?: RequestInit) =>
+      request<LikesRecommendations>("/recommendations", undefined, {
+        ...init,
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...init?.headers },
+        body: JSON.stringify({ liked, ...params }),
+      }),
   },
 
   graph: {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import ErrorState from "@/components/ErrorState";
 import Pagination from "@/components/Pagination";
@@ -74,7 +75,7 @@ async function MovieResults({ filters }: { filters: Filters }) {
       <p className="text-sm text-muted">
         {data.total.toLocaleString("es")} películas · página {filters.page} de {totalPages}
       </p>
-      <MovieGrid items={data.items} movie={(m) => m} />
+      <MovieGrid items={data.items} movie={(m) => m} likeable />
       <Pagination page={filters.page} totalPages={totalPages} hrefFor={(p) => catalogHref(filters, p)} />
     </div>
   );
@@ -101,7 +102,13 @@ export default function MoviesPage({ searchParams }: PageProps<"/movies">) {
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Catálogo</h1>
-        <p className="mt-1 text-sm text-muted">Películas de MovieLens con valoraciones positivas (rating ≥ 4).</p>
+        <p className="mt-1 text-sm text-muted">
+          Películas de MovieLens con valoraciones positivas (rating ≥ 4). Dale ♥ a las que te gusten y mira en{" "}
+          <Link href="/recommendations" className="text-foreground underline underline-offset-2">
+            Para ti
+          </Link>{" "}
+          qué recomienda el BFS.
+        </p>
       </div>
       <Suspense
         fallback={

@@ -7,7 +7,8 @@ Frontend del proyecto Netflix, construido con [Next.js](https://nextjs.org). Con
 | Ruta                 | Descripción                                                                                              |
 |----------------------|----------------------------------------------------------------------------------------------------------|
 | `/`                  | Redirige a `/movies`                                                                                     |
-| `/movies`            | Catálogo con búsqueda por título, filtro por género, orden (popular, título, año) y paginación           |
+| `/movies`            | Catálogo con búsqueda por título, filtro por género, orden (popular, título, año) y paginación. Botón ♥ en cada póster para darle me gusta |
+| `/recommendations`   | *Para ti*: BFS de 3 niveles desde tus me gusta (likes → usuarios similares → candidatas), con el recuento de cada nivel, las recomendaciones principales y la lista completa de candidatas indicando desde qué likes se llegó a cada una |
 | `/users`             | Listado de usuarios con valoraciones positivas y buscador por ID                                         |
 | `/users/[id]`        | Perfil del usuario: recomendaciones calculadas con BFS sobre el grafo, el árbol BFS interactivo que las genera y las películas que le gustaron |
 | `/graph`             | Estadísticas del grafo: nodos, aristas, densidad y grado medio                                           |
@@ -59,6 +60,7 @@ netflix-frontend/
 
 - **Las llamadas a la API se hacen en el servidor.** Las páginas son Server Components que llaman a `api.*` (`src/lib/api`); los componentes de cliente solo reciben los datos ya cargados. Por eso el navegador nunca habla directamente con el backend y no hace falta configurar CORS para este frontend.
 - **Cache Components y Partial Prefetching** activados en `next.config.ts`: el contenido estático de cada página se prerenderiza y los datos de la API se transmiten en streaming dentro de bloques `<Suspense>`.
+- **Me gusta en una cookie** (`liked`, ver `src/lib/likes.ts`): no hay cuentas, así que el perfil es del navegador. Al ser cookie, el botón ♥ (cliente) la escribe y `/recommendations` (servidor) la lee para llamar a `POST /api/recommendations` del backend.
 - **Estado en la URL**: filtros, página y parámetros de comunidades viven en los search params, así que cualquier vista se puede compartir o recargar.
 - **Carpeta `src/`** y **alias `@/*`** para separar el código de la configuración y evitar rutas relativas largas.
 

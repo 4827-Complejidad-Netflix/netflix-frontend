@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Suspense, type ReactNode } from "react";
+import LikeButton from "@/components/likes/LikeButton";
 import type { Movie } from "@/lib/api";
 import { posterUrl } from "@/lib/tmdb";
 
@@ -32,9 +33,11 @@ interface Props {
   movie: Movie;
   /** Sustituye la línea de valoraciones positivas (p. ej. score de recomendación o rating del usuario). */
   detail?: ReactNode;
+  /** Muestra el botón ♥ sobre el póster. `"refresh"` además recarga la página al cambiar el like. */
+  likeable?: boolean | "refresh";
 }
 
-export default function MovieCard({ movie, detail }: Props) {
+export default function MovieCard({ movie, detail, likeable }: Props) {
   return (
     <article className="group flex flex-col gap-2">
       <div
@@ -48,6 +51,7 @@ export default function MovieCard({ movie, detail }: Props) {
         <Suspense fallback={null}>
           <Poster movie={movie} />
         </Suspense>
+        {likeable && <LikeButton movieId={movie.id} title={movie.title} refreshOnChange={likeable === "refresh"} />}
       </div>
       <div className="flex flex-col gap-1 px-0.5">
         <h3 className="line-clamp-1 text-sm font-medium" title={movie.title}>

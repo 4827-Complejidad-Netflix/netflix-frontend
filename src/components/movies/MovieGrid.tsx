@@ -8,15 +8,16 @@ interface Props<T> {
   items: T[];
   movie: (item: T) => Movie;
   detail?: (item: T) => ReactNode;
+  likeable?: boolean | "refresh";
 }
 
 // Genérico para pintar Movie[], RatedMovie[] o Recommendation[] con el mismo layout.
-export default function MovieGrid<T>({ items, movie, detail }: Props<T>) {
+export default function MovieGrid<T>({ items, movie, detail, likeable }: Props<T>) {
   return (
     <div className={gridClass}>
       {items.map((item) => {
         const m = movie(item);
-        return <MovieCard key={m.id} movie={m} detail={detail?.(item)} />;
+        return <MovieCard key={m.id} movie={m} detail={detail?.(item)} likeable={likeable} />;
       })}
     </div>
   );

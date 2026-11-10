@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import LikesCount from "./likes/LikesCount";
 
 const links = [
   { href: "/movies", label: "Catálogo" },
+  { href: "/recommendations", label: "Para ti" },
   { href: "/users", label: "Usuarios" },
   { href: "/graph", label: "Grafo" },
   { href: "/graph/communities", label: "Comunidades" },
@@ -35,6 +37,7 @@ export function NavLinkList({ active }: { active?: string }) {
               }`}
             >
               {link.label}
+              {link.href === "/recommendations" && <LikesCount />}
             </Link>
           </li>
         );

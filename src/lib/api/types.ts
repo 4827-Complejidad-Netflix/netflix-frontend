@@ -32,6 +32,33 @@ export interface Recommendation {
   score: number;
 }
 
+export interface CandidateVia {
+  /** Película con "me gusta" desde la que se llegó a la candidata. */
+  movie: Movie;
+  /** Usuarios similares que valoraron positivamente ambas. */
+  users: number;
+}
+
+export interface Candidate {
+  movie: Movie;
+  /** Nº de usuarios similares (nivel 2 del BFS) que la valoraron positivamente. */
+  score: number;
+  /** De qué likes viene, más usuarios primero (máx. 3). */
+  via: CandidateVia[];
+}
+
+export interface LikesRecommendations {
+  /** Likes reconocidos por el backend. */
+  liked: Movie[];
+  /** IDs que no existen en el catálogo. */
+  ignored: number[];
+  /** Usuarios alcanzados en el nivel 2 del BFS. */
+  similar_users: number;
+  /** Películas alcanzadas en el nivel 3, antes de aplicar `limit`. */
+  total_candidates: number;
+  candidates: Candidate[];
+}
+
 export type NodeKind = "user" | "movie";
 
 export interface GraphNode {

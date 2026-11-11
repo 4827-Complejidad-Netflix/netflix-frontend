@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import ErrorState from "@/components/ErrorState";
 import CommunityControls from "@/components/graph/CommunityControls";
-import CommunityGraph, { CommunityGraphSkeleton } from "@/components/graph/CommunityGraph";
-import { api, type Community, type Graph } from "@/lib/api";
-import { communityColor, communityHref, parseCommunityQuery, type CommunityQuery } from "@/lib/communities";
+import CommunityExplorer, { CommunityExplorerSkeleton } from "@/components/graph/CommunityExplorer";
+import { api, type Community, type Graph, type IsolatedUser } from "@/lib/api";
+import { communityHref, parseCommunityQuery, type CommunityQuery } from "@/lib/communities";
 
 export const metadata: Metadata = { title: "Comunidades" };
 
@@ -14,6 +14,7 @@ const fmt = (n: number, digits = 2) =>
 interface Result {
   communities: Community[];
   isolated: number[];
+  isolated_details: IsolatedUser[];
   sample: number[];
   graph: Graph;
   summary: { label: string; value: string }[];
@@ -78,22 +79,14 @@ async function Results({ query }: { query: CommunityQuery }) {
 
       <p className="text-sm text-muted">{result.note}</p>
 
-      <ul className="flex flex-wrap gap-2 text-xs" aria-label="Leyenda">
-        {result.communities.map((c) => (
-          <li key={c.id} className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1">
-            <span className="size-3 rounded-full" style={{ background: communityColor(c.id) }} />
-            Comunidad {c.id + 1} · {c.users.length} usuarios
-          </li>
-        ))}
-        {result.isolated.length > 0 && (
-          <li className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1">
-            <span className="size-3 rounded-full" style={{ background: communityColor(-1) }} />
-            Sin comunidad · {result.isolated.length}
-          </li>
-        )}
-      </ul>
-
-      <CommunityGraph graph={result.graph} />
+      <CommunityExplorer
+        graph={result.graph}
+        communities={result.communities}
+        isolated={result.isolated_details}
+        method={query.method}
+        theta={query.method === "ufds" ? query.theta : null}
+        k={query.method === "kruskal" ? query.k : null}
+      />
     </div>
   );
 }
@@ -104,9 +97,9 @@ async function Explorer({ searchParams }: Pick<PageProps<"/graph/communities">, 
 
   return (
     <>
-       
+      {/* Keys distintas (son hermanos): reinician el formulario y el Suspense en cada consulta. */}
       <CommunityControls key={`controls:${href}`} query={query} />
-      <Suspense key={`results:${href}`} fallback={<CommunityGraphSkeleton />}>
+      <Suspense key={`results:${href}`} fallback={<CommunityExplorerSkeleton />}>
         <Results query={query} />
       </Suspense>
     </>
@@ -123,7 +116,7 @@ export default function CommunitiesPage({ searchParams }: PageProps<"/graph/comm
           semilla siempre produce la misma muestra.
         </p>
       </div>
-      <Suspense fallback={<CommunityGraphSkeleton />}>
+      <Suspense fallback={<CommunityExplorerSkeleton />}>
         <Explorer searchParams={searchParams} />
       </Suspense>
     </div>

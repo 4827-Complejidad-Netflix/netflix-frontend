@@ -10,6 +10,7 @@ import type {
   MovieListParams,
   PaginatedMovies,
   Recommendation,
+  Shared,
   User,
 } from "./types";
 
@@ -94,5 +95,7 @@ export const api = {
       request<Communities>("/graph/communities", { ...params }, init),
     kruskal: (params?: KruskalParams, init?: RequestInit) =>
       request<KruskalCommunities>("/graph/communities/kruskal", { ...params }, init),
+    shared: (u: number, v: number, params?: { limit?: number }, init?: RequestInit) =>
+      request<Shared>("/graph/shared", { u, v, ...params }, init),
   },
 };

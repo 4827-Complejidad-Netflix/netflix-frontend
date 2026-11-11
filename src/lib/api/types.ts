@@ -75,9 +75,7 @@ export interface GraphNode {
 export interface GraphEdge {
   source: string;
   target: string;
-  /** Calificación usuario→película (aristas de G_B). */
   rating: number | null;
-  /** Similitud de Jaccard (aristas de G_U). */
   weight: number | null;
 }
 
@@ -86,9 +84,43 @@ export interface Graph {
   edges: GraphEdge[];
 }
 
+/** Película que comparten varios miembros de una comunidad. */
+export interface SharedMovie {
+  movie: Movie;
+  users: number[];
+}
+
+export interface GenreShare {
+  genre: string;
+  share: number;
+  lift: number;
+}
+
 export interface Community {
   id: number;
   users: number[];
+  /** Jaccard medio de las aristas de G_U dentro de la comunidad. */
+  avg_similarity: number;
+  internal_edges: number;
+  shared_movies: SharedMovie[];
+  genres: GenreShare[];
+}
+
+/** Por qué un usuario quedó aislado: su par más parecido no alcanza el umbral. */
+export interface IsolatedUser {
+  user: number;
+  best_match: number | null;
+  similarity: number;
+}
+
+/** Películas en común entre dos usuarios: el motivo de su arista en G_U. */
+export interface Shared {
+  u: number;
+  v: number;
+  similarity: number;
+  shared_count: number;
+  union_count: number;
+  movies: Movie[];
 }
 
 export interface Communities {
@@ -96,17 +128,17 @@ export interface Communities {
   sample: number[];
   communities: Community[];
   isolated: number[];
+  isolated_details: IsolatedUser[];
   graph: Graph;
 }
 
 export interface KruskalCommunities {
   k: number;
-  /** Suma de Jaccard de las aristas elegidas por Kruskal. */
   total_similarity: number;
   sample: number[];
   communities: Community[];
   isolated: number[];
-  /** Solo las aristas del bosque de expansión máxima. */
+  isolated_details: IsolatedUser[];   
   graph: Graph;
 }
 

@@ -7,14 +7,17 @@ import ClearLikesButton from "@/components/likes/ClearLikesButton";
 import LikeButton from "@/components/likes/LikeButton";
 import MovieGrid, { MovieGridSkeleton } from "@/components/movies/MovieGrid";
 import { api, type Candidate, type LikesRecommendations } from "@/lib/api";
+import { genreProfile, rankByGenre, type GenreProfile, type RankedCandidate } from "@/lib/genreRanking";
 import { LIKES_COOKIE, parseLikes } from "@/lib/likes";
 
 export const metadata: Metadata = { title: "Para ti" };
 
-/** Candidatas que se piden al backend y se listan en la tabla completa. */
-const CANDIDATES_LIMIT = 100;
-/** Las primeras se muestran además como tarjetas. */
-const TOP_LIMIT = 12;
+/** Candidatas que se piden al backend (el máximo que acepta) para reordenarlas por género. */
+const CANDIDATES_LIMIT = 200;
+/** Filas de la tabla completa. */
+const LIST_LIMIT = 100;
+/** Las primeras se muestran además como tarjetas en "Para ti". */
+const TOP_LIMIT = 5;
 
 function Section({ title, subtitle, action, children }: {
   title: string;
@@ -40,22 +43,29 @@ function plural(n: number, one: string, many: string): string {
   return `${n.toLocaleString("es")} ${n === 1 ? one : many}`;
 }
 
-/** Los tres niveles del BFS con lo que se encontró en cada uno. */
-function Pipeline({ data }: { data: LikesRecommendations }) {
+/** Los tres niveles del BFS con lo que se encontró en cada uno, más el filtro de género. */
+function Pipeline({ data, profile, sameGenre }: { data: LikesRecommendations; profile: GenreProfile; sameGenre: number }) {
   const steps = [
     { level: "Nivel 1", value: plural(data.liked.length, "película", "películas"), label: "con tu me gusta" },
     { level: "Nivel 2", value: plural(data.similar_users, "usuario", "usuarios"), label: "también las valoraron (rating ≥ 4)" },
     { level: "Nivel 3", value: plural(data.total_candidates, "candidata", "candidatas"), label: "valoradas por esos usuarios y que aún no tienes" },
+    {
+      level: "Género",
+      value: plural(sameGenre, "candidata", "candidatas"),
+      label: profile.top.length
+        ? `de tus géneros (${profile.top.slice(0, 3).join(", ")}${profile.top.length > 3 ? "…" : ""})`
+        : "tus likes no tienen género",
+    },
   ];
   return (
-    <ol className="grid gap-3 sm:grid-cols-3">
+    <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {steps.map((step, i) => (
         <li key={step.level} className="relative rounded-lg border border-border bg-surface px-4 py-3">
           <p className="text-xs uppercase tracking-wide text-muted">{step.level}</p>
           <p className="mt-1 text-2xl font-bold tabular-nums">{step.value}</p>
           <p className="text-sm text-muted">{step.label}</p>
           {i < steps.length - 1 && (
-            <span aria-hidden="true" className="absolute -right-2.5 top-1/2 z-10 hidden -translate-y-1/2 text-muted sm:block">
+            <span aria-hidden="true" className="absolute -right-2.5 top-1/2 z-10 hidden -translate-y-1/2 text-muted lg:block">
               →
             </span>
           )}
@@ -82,8 +92,7 @@ function Via({ candidate }: { candidate: Candidate }) {
 }
 
 /** Lista completa y ordenada de candidatas: lo que el algoritmo realmente devolvió. */
-function CandidateList({ candidates }: { candidates: Candidate[] }) {
-  const maxScore = candidates[0]?.score ?? 1;
+function CandidateList({ candidates }: { candidates: RankedCandidate[] }) {
   return (
     <ol className="divide-y divide-border overflow-hidden rounded-lg border border-border">
       {candidates.map((c, i) => (
@@ -95,14 +104,26 @@ function CandidateList({ candidates }: { candidates: Candidate[] }) {
                 {c.movie.title}
                 {c.movie.year && <span className="font-normal text-muted"> · {c.movie.year}</span>}
               </p>
-              <p className="truncate text-xs text-muted">{c.movie.genres.join(" · ") || "Sin género"}</p>
+              <p className="truncate text-xs text-muted">
+                {c.movie.genres.length === 0
+                  ? "Sin género"
+                  : c.movie.genres.map((g, j) => (
+                      <span key={g}>
+                        {j > 0 && " · "}
+                        <span className={c.sharedGenres.includes(g) ? "font-medium text-foreground" : undefined}>{g}</span>
+                      </span>
+                    ))}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 pl-11 sm:w-44 sm:pl-0">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border" aria-hidden="true">
-              <div className="h-full rounded-full bg-foreground" style={{ width: `${(c.score / maxScore) * 100}%` }} />
+              <div className="h-full rounded-full bg-foreground" style={{ width: `${c.rank * 100}%` }} />
             </div>
-            <span className="w-24 text-right text-xs tabular-nums text-foreground/80">
+            <span
+              className="w-24 text-right text-xs tabular-nums text-foreground/80"
+              title={`Afinidad de género: ${Math.round(c.genreAffinity * 100)} %`}
+            >
               {plural(c.score, "usuario", "usuarios")}
             </span>
           </div>
@@ -146,14 +167,17 @@ async function ForYou() {
 
   // Más recientes primero, como los añadió el usuario.
   const likedMovies = [...data.liked].reverse();
+  const profile = genreProfile(data.liked);
+  const ranked = rankByGenre(data.candidates, profile);
+  const sameGenre = ranked.filter((c) => c.sharedGenres.length > 0).length;
 
   return (
     <>
-      <Pipeline data={data} />
+      <Pipeline data={data} profile={profile} sameGenre={sameGenre} />
 
       <Section
         title="Recomendaciones"
-        subtitle="Las candidatas con más usuarios similares. Dales ♥ para añadirlas a tu perfil y recalcular."
+        subtitle={`Las ${TOP_LIMIT} candidatas que más usuarios similares valoraron y que comparten género con tus me gusta. Dales ♥ para añadirlas a tu perfil y recalcular.`}
       >
         {data.candidates.length === 0 ? (
           <p className="text-sm text-muted">
@@ -161,14 +185,16 @@ async function ForYou() {
           </p>
         ) : (
           <MovieGrid
-            items={data.candidates.slice(0, TOP_LIMIT)}
+            items={ranked.slice(0, TOP_LIMIT)}
             movie={(c) => c.movie}
             likeable="refresh"
             detail={(c) => (
               <>
                 <span className="font-semibold text-foreground">{c.score}</span>{" "}
                 {c.score === 1 ? "usuario similar" : "usuarios similares"}
-                {c.via[0] && <span className="text-muted"> · por {c.via[0].movie.title}</span>}
+                {c.sharedGenres.length > 0 && (
+                  <span className="text-muted"> · {c.sharedGenres.slice(0, 2).join(", ")}</span>
+                )}
               </>
             )}
           />
@@ -180,15 +206,16 @@ async function ForYou() {
           title="Todas las candidatas"
           subtitle={
             <>
-              {data.total_candidates > data.candidates.length
-                ? `Las ${data.candidates.length} primeras de ${data.total_candidates.toLocaleString("es")}, `
-                : `Las ${data.candidates.length}, `}
-              ordenadas por score (usuarios del nivel 2 que la valoraron). Las etiquetas ♥ indican desde qué likes se
-              llegó y cuántos usuarios comparten ambas películas.
+              {data.total_candidates > Math.min(ranked.length, LIST_LIMIT)
+                ? `Las ${Math.min(ranked.length, LIST_LIMIT)} primeras de ${data.total_candidates.toLocaleString("es")}, `
+                : `Las ${ranked.length}, `}
+              ordenadas por usuarios del nivel 2 que la valoraron (60 %) y afinidad con tus géneros (40 %); las que no
+              comparten género van al final. En negrita, los géneros que coinciden con tus likes. Las etiquetas ♥
+              indican desde qué likes se llegó y cuántos usuarios comparten ambas películas.
             </>
           }
         >
-          <CandidateList candidates={data.candidates} />
+          <CandidateList candidates={ranked.slice(0, LIST_LIMIT)} />
         </Section>
       )}
 
@@ -211,14 +238,14 @@ export default function RecommendationsPage() {
         <h1 className="text-3xl font-bold tracking-tight">Para ti</h1>
         <p className="mt-1 text-sm text-muted">
           BFS de 3 niveles en G_B partiendo de tus me gusta: tus películas → usuarios que también las valoraron →
-          películas candidatas.
+          películas candidatas, priorizando las de tus mismos géneros.
         </p>
       </div>
       <Suspense
         fallback={
           <>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {Array.from({ length: 3 }, (_, i) => (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }, (_, i) => (
                 <div key={i} className="h-24 animate-pulse rounded-lg bg-surface" />
               ))}
             </div>

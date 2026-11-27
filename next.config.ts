@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // No generar AGENTS.md con instrucciones para agentes de IA.
+  agentRules: false,
   cacheComponents: true,
   partialPrefetching: true,
   images: {

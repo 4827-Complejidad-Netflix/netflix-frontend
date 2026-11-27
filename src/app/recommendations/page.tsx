@@ -4,44 +4,71 @@ import Link from "next/link";
 import { Suspense } from "react";
 import ErrorState from "@/components/ErrorState";
 import ClearLikesButton from "@/components/likes/ClearLikesButton";
-import LikeButton from "@/components/likes/LikeButton";
 import MovieGrid, { MovieGridSkeleton } from "@/components/movies/MovieGrid";
-import { api, type Candidate, type LikesRecommendations } from "@/lib/api";
-import { genreProfile, rankByGenre, type GenreProfile, type RankedCandidate } from "@/lib/genreRanking";
+import { api, type LikesRecommendations, type Movie } from "@/lib/api";
+import {
+  applyCriterion,
+  parseCriterion,
+  TOP_LIMIT,
+  type CriterionId,
+  type CriterionResult,
+} from "@/lib/criteria";
+import { genreProfile, rankByGenre, type GenreProfile } from "@/lib/genreRanking";
 import { LIKES_COOKIE, parseLikes } from "@/lib/likes";
 
 export const metadata: Metadata = { title: "Para ti" };
 
-/** Candidatas que se piden al backend (el máximo que acepta) para reordenarlas por género. */
+/** Candidatas que se piden al backend (el máximo que acepta) para reordenarlas según cada criterio. */
 const CANDIDATES_LIMIT = 200;
-/** Filas de la tabla completa. */
-const LIST_LIMIT = 100;
-/** Las primeras se muestran además como tarjetas en "Para ti". */
-const TOP_LIMIT = 5;
 
-function Section({ title, subtitle, action, children }: {
-  title: string;
-  subtitle?: React.ReactNode;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold">{title}</h2>
-          {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
+function first(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function plural(n: number, one: string, many: string): string {
   return `${n.toLocaleString("es")} ${n === 1 ? one : many}`;
 }
+
+function criterionHref(criterion: CriterionId, likedId?: number): string {
+  const params = new URLSearchParams({ criterio: criterion });
+  if (likedId !== undefined) params.set("pelicula", String(likedId));
+  return `/recommendations?${params}`;
+}
+
+interface CriterionInfo {
+  label: string;
+  icon: string;
+  /** Qué mide el criterio, en una frase. */
+  rule: string;
+}
+
+const CRITERIA_INFO: Record<CriterionId, CriterionInfo> = {
+  combinada: {
+    label: "Para ti",
+    icon: "★",
+    rule: "Mezcla los dos criterios principales: usuarios similares que la valoraron (60 %) y afinidad con tus géneros (40 %). Las que no comparten ningún género van al final.",
+  },
+  usuarios: {
+    label: "Usuarios similares",
+    icon: "👥",
+    rule: "Filtrado colaborativo: las que más valoraron (rating ≥ 4) los usuarios a los que también les gustan tus películas.",
+  },
+  generos: {
+    label: "Tus géneros",
+    icon: "🎭",
+    rule: "Las que mejor cubren tu perfil de géneros, es decir, los géneros que más se repiten en tus me gusta.",
+  },
+  populares: {
+    label: "Más populares",
+    icon: "🔥",
+    rule: "Entre las candidatas del BFS, las que tienen más valoraciones positivas en todo MovieLens.",
+  },
+  similares: {
+    label: "Parecidas a…",
+    icon: "🎬",
+    rule: "Las que más valoraron los usuarios a quienes también les gustó la película que elijas.",
+  },
+};
 
 /** Los tres niveles del BFS con lo que se encontró en cada uno, más el filtro de género. */
 function Pipeline({ data, profile, sameGenre }: { data: LikesRecommendations; profile: GenreProfile; sameGenre: number }) {
@@ -60,12 +87,12 @@ function Pipeline({ data, profile, sameGenre }: { data: LikesRecommendations; pr
   return (
     <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {steps.map((step, i) => (
-        <li key={step.level} className="relative rounded-lg border border-border bg-surface px-4 py-3">
-          <p className="text-xs uppercase tracking-wide text-muted">{step.level}</p>
+        <li key={step.level} className="relative rounded-xl border border-border bg-surface px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-accent-soft">{step.level}</p>
           <p className="mt-1 text-2xl font-bold tabular-nums">{step.value}</p>
           <p className="text-sm text-muted">{step.label}</p>
           {i < steps.length - 1 && (
-            <span aria-hidden="true" className="absolute -right-2.5 top-1/2 z-10 hidden -translate-y-1/2 text-muted lg:block">
+            <span aria-hidden="true" className="absolute -right-2.5 top-1/2 z-10 hidden -translate-y-1/2 text-accent-soft lg:block">
               →
             </span>
           )}
@@ -75,83 +102,125 @@ function Pipeline({ data, profile, sameGenre }: { data: LikesRecommendations; pr
   );
 }
 
-function Via({ candidate }: { candidate: Candidate }) {
+/** Pestañas para elegir el criterio de la recomendación. */
+function CriterionTabs({ active, likedId }: { active: CriterionId; likedId?: number }) {
   return (
-    <ul className="flex flex-wrap gap-1.5">
-      {candidate.via.map((v) => (
-        <li
-          key={v.movie.id}
-          className="max-w-full truncate rounded-full border border-border px-2 py-0.5 text-xs text-foreground/80"
-          title={`${plural(v.users, "usuario valoró", "usuarios valoraron")} ${v.movie.title} y esta película`}
-        >
-          <span className="text-danger">♥</span> {v.movie.title} <span className="text-muted">· {v.users}</span>
-        </li>
-      ))}
-    </ul>
+    <nav aria-label="Criterio de recomendación" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <ul className="flex w-max gap-2 rounded-full border border-border bg-surface p-1">
+        {(Object.keys(CRITERIA_INFO) as CriterionId[]).map((id) => {
+          const isActive = id === active;
+          return (
+            <li key={id}>
+              <Link
+                href={criterionHref(id, id === "similares" ? likedId : undefined)}
+                scroll={false}
+                aria-current={isActive ? "page" : undefined}
+                className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${
+                  isActive
+                    ? "bg-accent font-medium text-accent-foreground shadow-lg shadow-accent/25"
+                    : "text-muted hover:bg-surface-hover hover:text-foreground"
+                }`}
+              >
+                <span aria-hidden="true">{CRITERIA_INFO[id].icon}</span>
+                {CRITERIA_INFO[id].label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
 
-/** Lista completa y ordenada de candidatas: lo que el algoritmo realmente devolvió. */
-function CandidateList({ candidates }: { candidates: RankedCandidate[] }) {
+/** Elige la película de referencia del criterio "Parecidas a…". */
+function LikedPicker({ liked, active }: { liked: Movie[]; active: number }) {
   return (
-    <ol className="divide-y divide-border overflow-hidden rounded-lg border border-border">
-      {candidates.map((c, i) => (
-        <li key={c.movie.id} className="flex flex-col gap-2 bg-surface px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
-          <div className="flex min-w-0 flex-1 items-baseline gap-3">
-            <span className="w-8 shrink-0 text-right text-sm tabular-nums text-muted">{i + 1}</span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium" title={c.movie.title}>
-                {c.movie.title}
-                {c.movie.year && <span className="font-normal text-muted"> · {c.movie.year}</span>}
-              </p>
-              <p className="truncate text-xs text-muted">
-                {c.movie.genres.length === 0
-                  ? "Sin género"
-                  : c.movie.genres.map((g, j) => (
-                      <span key={g}>
-                        {j > 0 && " · "}
-                        <span className={c.sharedGenres.includes(g) ? "font-medium text-foreground" : undefined}>{g}</span>
-                      </span>
-                    ))}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 pl-11 sm:w-44 sm:pl-0">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border" aria-hidden="true">
-              <div className="h-full rounded-full bg-foreground" style={{ width: `${c.rank * 100}%` }} />
-            </div>
-            <span
-              className="w-24 text-right text-xs tabular-nums text-foreground/80"
-              title={`Afinidad de género: ${Math.round(c.genreAffinity * 100)} %`}
-            >
-              {plural(c.score, "usuario", "usuarios")}
-            </span>
-          </div>
-          <div className="min-w-0 pl-11 sm:w-72 sm:pl-0">
-            <Via candidate={c} />
-          </div>
-          <div className="self-end sm:self-center">
-            <LikeButton movieId={c.movie.id} title={c.movie.title} refreshOnChange inline />
-          </div>
-        </li>
-      ))}
-    </ol>
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-sm text-muted">Película de referencia:</span>
+      {liked.map((movie) => {
+        const isActive = movie.id === active;
+        return (
+          <Link
+            key={movie.id}
+            href={criterionHref("similares", movie.id)}
+            scroll={false}
+            aria-current={isActive ? "true" : undefined}
+            className={`max-w-56 truncate rounded-full border px-3 py-1 text-xs transition-colors ${
+              isActive
+                ? "border-accent bg-accent/15 font-medium text-foreground"
+                : "border-border text-muted hover:border-accent/60 hover:text-foreground"
+            }`}
+            title={movie.title}
+          >
+            {movie.title}
+          </Link>
+        );
+      })}
+    </div>
   );
 }
 
-async function ForYou() {
+/** Por qué aparece la película según el criterio elegido. */
+function Reason({ criterion, result }: { criterion: CriterionId; result: CriterionResult }) {
+  const c = result.candidate;
+  switch (criterion) {
+    case "combinada":
+      return (
+        <>
+          <span className="font-semibold text-foreground">{c.score}</span> {c.score === 1 ? "usuario similar" : "usuarios similares"}
+          {c.sharedGenres.length > 0 && <span className="text-muted"> · {c.sharedGenres.slice(0, 2).join(", ")}</span>}
+        </>
+      );
+    case "usuarios":
+      return (
+        <>
+          <span className="font-semibold text-foreground">{c.score}</span>{" "}
+          {c.score === 1 ? "usuario similar la valoró" : "usuarios similares la valoraron"}
+        </>
+      );
+    case "generos":
+      return (
+        <>
+          <span className="font-semibold text-foreground">{Math.round(c.genreAffinity * 100)} %</span> de tus géneros
+          <span className="text-muted"> · {c.sharedGenres.slice(0, 2).join(", ")}</span>
+        </>
+      );
+    case "populares":
+      return (
+        <>
+          <span className="text-gold">★</span>{" "}
+          <span className="font-semibold text-foreground">{c.movie.positive_ratings.toLocaleString("es")}</span> valoraciones
+          positivas
+        </>
+      );
+    case "similares":
+      return (
+        <>
+          <span className="font-semibold text-foreground">{result.viaUsers}</span>{" "}
+          {result.viaUsers === 1 ? "usuario valoró ambas" : "usuarios valoraron ambas"}
+        </>
+      );
+  }
+}
+
+async function ForYou({ searchParams }: Pick<PageProps<"/recommendations">, "searchParams">) {
+  const params = await searchParams;
+  const criterion = parseCriterion(first(params.criterio));
   const liked = parseLikes((await cookies()).get(LIKES_COOKIE)?.value);
 
   if (liked.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-4 py-16 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-surface/50 px-4 py-16 text-center">
         <p className="text-4xl text-danger" aria-hidden="true">♡</p>
         <p className="font-semibold">Aún no le diste me gusta a ninguna película</p>
         <p className="max-w-md text-sm text-muted">
           Pasa el cursor por un póster del catálogo y pulsa ♥. Con tus likes el BFS busca usuarios con gustos parecidos y
           te recomienda lo que ellos valoraron.
         </p>
-        <Link href="/movies" className="mt-2 rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-foreground/90">
+        <Link
+          href="/movies"
+          className="mt-2 rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-foreground shadow-lg shadow-accent/25 hover:bg-accent-hover"
+        >
           Ir al catálogo
         </Link>
       </div>
@@ -171,74 +240,79 @@ async function ForYou() {
   const ranked = rankByGenre(data.candidates, profile);
   const sameGenre = ranked.filter((c) => c.sharedGenres.length > 0).length;
 
+  // Película de referencia para "Parecidas a…": la pedida en la URL o, si no es un like, el más reciente.
+  const requested = Number(first(params.pelicula));
+  const likedId = likedMovies.some((m) => m.id === requested) ? requested : likedMovies[0]?.id;
+  const reference = likedMovies.find((m) => m.id === likedId);
+
+  const results = applyCriterion(criterion, ranked, likedId);
+  const info = CRITERIA_INFO[criterion];
+
   return (
     <>
       <Pipeline data={data} profile={profile} sameGenre={sameGenre} />
 
-      <Section
-        title="Recomendaciones"
-        subtitle={`Las ${TOP_LIMIT} candidatas que más usuarios similares valoraron y que comparten género con tus me gusta. Dales ♥ para añadirlas a tu perfil y recalcular.`}
-      >
-        {data.candidates.length === 0 ? (
-          <p className="text-sm text-muted">
-            El BFS no encontró candidatas: nadie más valoró positivamente estas películas. Prueba con otras más populares.
+      <section className="flex flex-col gap-5" aria-labelledby="recs-title">
+        <CriterionTabs active={criterion} likedId={likedId} />
+
+        <div className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
+          <h2 id="recs-title" className="text-xl font-bold">
+            <span aria-hidden="true">{info.icon}</span>{" "}
+            {criterion === "similares" && reference ? `Parecidas a ${reference.title}` : info.label}
+          </h2>
+          <p className="mt-1 text-sm text-foreground/80">
+            <span className="font-medium text-accent-soft">Criterio:</span> {info.rule} Se muestran las {TOP_LIMIT} más
+            relevantes.
+          </p>
+        </div>
+
+        {criterion === "similares" && likedId !== undefined && likedMovies.length > 1 && (
+          <LikedPicker liked={likedMovies} active={likedId} />
+        )}
+
+        {results.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted">
+            {data.candidates.length === 0
+              ? "El BFS no encontró candidatas: nadie más valoró positivamente estas películas. Prueba con otras más populares."
+              : criterion === "generos"
+                ? "Ninguna candidata comparte género con tus me gusta."
+                : "No hay candidatas que se alcancen desde esta película. Prueba con otra."}
           </p>
         ) : (
           <MovieGrid
-            items={ranked.slice(0, TOP_LIMIT)}
-            movie={(c) => c.movie}
+            items={results}
+            movie={(r) => r.candidate.movie}
             likeable="refresh"
-            detail={(c) => (
-              <>
-                <span className="font-semibold text-foreground">{c.score}</span>{" "}
-                {c.score === 1 ? "usuario similar" : "usuarios similares"}
-                {c.sharedGenres.length > 0 && (
-                  <span className="text-muted"> · {c.sharedGenres.slice(0, 2).join(", ")}</span>
-                )}
-              </>
-            )}
+            columns={5}
+            detail={(r) => <Reason criterion={criterion} result={r} />}
           />
         )}
-      </Section>
+        <p className="text-xs text-muted">Dale ♥ a una recomendación para añadirla a tus me gusta y recalcular.</p>
+      </section>
 
-      {data.candidates.length > 0 && (
-        <Section
-          title="Todas las candidatas"
-          subtitle={
-            <>
-              {data.total_candidates > Math.min(ranked.length, LIST_LIMIT)
-                ? `Las ${Math.min(ranked.length, LIST_LIMIT)} primeras de ${data.total_candidates.toLocaleString("es")}, `
-                : `Las ${ranked.length}, `}
-              ordenadas por usuarios del nivel 2 que la valoraron (60 %) y afinidad con tus géneros (40 %); las que no
-              comparten género van al final. En negrita, los géneros que coinciden con tus likes. Las etiquetas ♥
-              indican desde qué likes se llegó y cuántos usuarios comparten ambas películas.
-            </>
-          }
-        >
-          <CandidateList candidates={ranked.slice(0, LIST_LIMIT)} />
-        </Section>
-      )}
-
-      <Section
-        title="Tus me gusta"
-        subtitle="El punto de partida del BFS. Quita uno para ver cómo cambian las candidatas."
-        action={<ClearLikesButton />}
-      >
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-bold">Tus me gusta</h2>
+            <p className="mt-1 text-sm text-muted">El punto de partida del BFS. Quita uno para ver cómo cambian las recomendaciones.</p>
+          </div>
+          <ClearLikesButton />
+        </div>
         <MovieGrid items={likedMovies} movie={(m) => m} likeable="refresh" />
-      </Section>
+      </section>
     </>
   );
 }
 
-// Los likes salen de una cookie (dato de ejecución), así que todo lo que depende de ellos va en <Suspense>.
-export default function RecommendationsPage() {
+// Los likes salen de una cookie y el criterio de la URL (datos de ejecución): todo lo que depende de ellos va en <Suspense>.
+export default function RecommendationsPage({ searchParams }: PageProps<"/recommendations">) {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-8 sm:px-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Para ti</h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1 className="text-gradient w-fit text-3xl font-bold tracking-tight">Para ti</h1>
+        <p className="mt-1 max-w-3xl text-sm text-muted">
           BFS de 3 niveles en G_B partiendo de tus me gusta: tus películas → usuarios que también las valoraron →
-          películas candidatas, priorizando las de tus mismos géneros.
+          películas candidatas. Elige un criterio para ver las {TOP_LIMIT} candidatas más relevantes según él.
         </p>
       </div>
       <Suspense
@@ -246,14 +320,14 @@ export default function RecommendationsPage() {
           <>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }, (_, i) => (
-                <div key={i} className="h-24 animate-pulse rounded-lg bg-surface" />
+                <div key={i} className="h-24 animate-pulse rounded-xl bg-surface" />
               ))}
             </div>
-            <MovieGridSkeleton count={TOP_LIMIT} />
+            <MovieGridSkeleton count={TOP_LIMIT} columns={5} />
           </>
         }
       >
-        <ForYou />
+        <ForYou searchParams={searchParams} />
       </Suspense>
     </div>
   );

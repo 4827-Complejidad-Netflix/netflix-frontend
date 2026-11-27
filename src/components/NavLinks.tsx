@@ -32,7 +32,7 @@ export function NavLinkList({ active }: { active?: string }) {
               aria-current={isActive ? "page" : undefined}
               className={`block whitespace-nowrap rounded-full px-3 py-1.5 transition-colors ${
                 isActive
-                  ? "bg-white/10 font-medium text-foreground ring-1 ring-white/15"
+                  ? "bg-accent/20 font-medium text-foreground ring-1 ring-accent/50"
                   : "text-muted hover:bg-surface-hover hover:text-foreground"
               }`}
             >

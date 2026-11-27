@@ -29,7 +29,7 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
   }
 
   const field =
-    "h-10 rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-muted";
+    "h-10 rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-accent";
   const button = "h-10 rounded-md px-4 text-sm font-semibold transition-colors disabled:opacity-50";
 
   return (
@@ -43,7 +43,7 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
             aria-selected={query.method === m.value}
             disabled={isPending}
             onClick={() => go({ method: m.value })}
-            className={`${button} ${query.method === m.value ? "bg-foreground text-background" : "bg-surface ring-1 ring-border hover:bg-surface-hover"}`}
+            className={`${button} ${query.method === m.value ? "bg-accent text-accent-foreground" : "bg-surface ring-1 ring-border hover:bg-surface-hover"}`}
           >
             {m.label}
           </button>
@@ -94,7 +94,7 @@ export default function CommunityControls({ query }: { query: CommunityQuery }) 
           Semilla
           <input type="number" value={seed} onChange={(e) => setSeed(e.target.value)} className={`${field} lg:w-32`} />
         </label>
-        <button type="submit" disabled={isPending} className={`${button} bg-foreground text-background hover:bg-white`}>
+        <button type="submit" disabled={isPending} className={`${button} bg-accent text-accent-foreground hover:bg-accent-hover`}>
           {isPending ? "Calculando…" : "Aplicar"}
         </button>
         <button

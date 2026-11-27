@@ -41,7 +41,7 @@ export default function MovieCard({ movie, detail, likeable }: Props) {
   return (
     <article className="group flex flex-col gap-2">
       <div
-        className="relative flex aspect-[2/3] flex-col justify-end overflow-hidden rounded-md p-3 shadow-lg ring-1 ring-white/10 transition duration-200 group-hover:-translate-y-1 group-hover:ring-white/40"
+        className="relative flex aspect-[2/3] flex-col justify-end overflow-hidden rounded-md p-3 shadow-lg ring-1 ring-white/10 transition duration-200 group-hover:-translate-y-1 group-hover:shadow-accent/30 group-hover:ring-accent-soft/70"
         style={{ background: posterGradient(movie.id) }}
       >
         <p className="line-clamp-4 text-base font-bold leading-tight text-white drop-shadow" aria-hidden="true">

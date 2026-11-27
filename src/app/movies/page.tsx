@@ -101,7 +101,7 @@ export default function MoviesPage({ searchParams }: PageProps<"/movies">) {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-8">
       <div>
-        <h1 className="text-gradient w-fit text-3xl font-bold tracking-tight">Catálogo</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Catálogo</h1>
         <p className="mt-1 text-sm text-muted">
           Películas de MovieLens con valoraciones positivas (rating ≥ 4). Dale ♥ a las que te gusten y mira en{" "}
           <Link href="/recommendations" className="text-foreground underline underline-offset-2">

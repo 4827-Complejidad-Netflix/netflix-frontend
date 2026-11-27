@@ -110,7 +110,7 @@ export default function CommunitiesPage({ searchParams }: PageProps<"/graph/comm
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-8">
       <div>
-        <h1 className="text-gradient w-fit text-3xl font-bold tracking-tight">Comunidades de gusto</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Comunidades de gusto</h1>
         <p className="mt-1 text-sm text-muted">
           Proyección usuario–usuario G_U sobre una muestra de usuarios con 20 a 300 valoraciones positivas. La misma
           semilla siempre produce la misma muestra.

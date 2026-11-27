@@ -43,7 +43,7 @@ export default function UsersPage() {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-8">
       <div>
-        <h1 className="text-gradient w-fit text-3xl font-bold tracking-tight">Usuarios</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Usuarios</h1>
         <p className="mt-1 text-sm text-muted">
           Elige un usuario para ver sus películas favoritas y las recomendaciones que genera el BFS sobre G_B.
         </p>

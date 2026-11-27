@@ -65,7 +65,7 @@ export default function CommunityGraph({ graph }: { graph: Graph }) {
             style: {
               // Grosor proporcional a la similitud de Jaccard.
               width: (ele: EdgeSingular) => 0.8 + (3.5 * ((ele.data("weight") as number) - minW)) / range,
-              "line-color": "#3b3552",
+              "line-color": "#3a3a3a",
               opacity: 0.55,
               "curve-style": "haystack",
             },

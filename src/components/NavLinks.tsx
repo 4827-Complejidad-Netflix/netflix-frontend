@@ -30,9 +30,9 @@ export function NavLinkList({ active }: { active?: string }) {
             <Link
               href={link.href}
               aria-current={isActive ? "page" : undefined}
-              className={`block whitespace-nowrap rounded-full px-3 py-1.5 transition-colors ${
+              className={`relative block whitespace-nowrap rounded-full px-3 py-1.5 transition-colors ${
                 isActive
-                  ? "bg-accent/20 font-medium text-foreground ring-1 ring-accent/50"
+                  ? "font-medium text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-accent"
                   : "text-muted hover:bg-surface-hover hover:text-foreground"
               }`}
             >

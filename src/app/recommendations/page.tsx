@@ -37,7 +37,6 @@ function criterionHref(criterion: CriterionId, likedId?: number): string {
 
 interface CriterionInfo {
   label: string;
-  icon: string;
   /** Qué mide el criterio, en una frase. */
   rule: string;
 }
@@ -45,27 +44,22 @@ interface CriterionInfo {
 const CRITERIA_INFO: Record<CriterionId, CriterionInfo> = {
   combinada: {
     label: "Para ti",
-    icon: "★",
     rule: "Mezcla los dos criterios principales: usuarios similares que la valoraron (60 %) y afinidad con tus géneros (40 %). Las que no comparten ningún género van al final.",
   },
   usuarios: {
     label: "Usuarios similares",
-    icon: "👥",
     rule: "Filtrado colaborativo: las que más valoraron (rating ≥ 4) los usuarios a los que también les gustan tus películas.",
   },
   generos: {
     label: "Tus géneros",
-    icon: "🎭",
     rule: "Las que mejor cubren tu perfil de géneros, es decir, los géneros que más se repiten en tus me gusta.",
   },
   populares: {
     label: "Más populares",
-    icon: "🔥",
     rule: "Entre las candidatas del BFS, las que tienen más valoraciones positivas en todo MovieLens.",
   },
   similares: {
     label: "Parecidas a…",
-    icon: "🎬",
     rule: "Las que más valoraron los usuarios a quienes también les gustó la película que elijas.",
   },
 };
@@ -115,13 +109,12 @@ function CriterionTabs({ active, likedId }: { active: CriterionId; likedId?: num
                 href={criterionHref(id, id === "similares" ? likedId : undefined)}
                 scroll={false}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${
+                className={`block whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${
                   isActive
-                    ? "bg-accent font-medium text-accent-foreground shadow-lg shadow-accent/25"
+                    ? "bg-accent font-medium text-accent-foreground"
                     : "text-muted hover:bg-surface-hover hover:text-foreground"
                 }`}
               >
-                <span aria-hidden="true">{CRITERIA_INFO[id].icon}</span>
                 {CRITERIA_INFO[id].label}
               </Link>
             </li>
@@ -219,7 +212,7 @@ async function ForYou({ searchParams }: Pick<PageProps<"/recommendations">, "sea
         </p>
         <Link
           href="/movies"
-          className="mt-2 rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-foreground shadow-lg shadow-accent/25 hover:bg-accent-hover"
+          className="mt-2 rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
         >
           Ir al catálogo
         </Link>
@@ -255,9 +248,8 @@ async function ForYou({ searchParams }: Pick<PageProps<"/recommendations">, "sea
       <section className="flex flex-col gap-5" aria-labelledby="recs-title">
         <CriterionTabs active={criterion} likedId={likedId} />
 
-        <div className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
+        <div className="rounded-r-xl border-l-2 border-accent bg-surface px-4 py-3">
           <h2 id="recs-title" className="text-xl font-bold">
-            <span aria-hidden="true">{info.icon}</span>{" "}
             {criterion === "similares" && reference ? `Parecidas a ${reference.title}` : info.label}
           </h2>
           <p className="mt-1 text-sm text-foreground/80">
@@ -309,7 +301,7 @@ export default function RecommendationsPage({ searchParams }: PageProps<"/recomm
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-8 sm:px-8">
       <div>
-        <h1 className="text-gradient w-fit text-3xl font-bold tracking-tight">Para ti</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Para ti</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted">
           BFS de 3 niveles en G_B partiendo de tus me gusta: tus películas → usuarios que también las valoraron →
           películas candidatas. Elige un criterio para ver las {TOP_LIMIT} candidatas más relevantes según él.

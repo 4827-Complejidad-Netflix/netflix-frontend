@@ -102,7 +102,7 @@ export default function CommunityExplorer({ graph, communities, isolated, method
             style: {
               // Grosor proporcional a la similitud de Jaccard.
               width: (ele: EdgeSingular) => 0.8 + (3.5 * ((ele.data("weight") as number) - minW)) / range,
-              "line-color": "#4a4463",
+              "line-color": "#4a4a4a",
               opacity: 0.6,
               "curve-style": "haystack",
               // Área de clic más ancha que la línea, para poder seleccionar aristas finas.

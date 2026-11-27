@@ -1,11 +1,11 @@
-/** Insignia con el degradado de marca y un pequeño grafo usuario–película. */
+/** Insignia roja con un pequeño grafo usuario–película. */
 export function LogoMark({ className = "size-7" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
       <defs>
         <linearGradient id="logo-gradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#ec4899" />
+          <stop offset="0%" stopColor="#e11d48" />
+          <stop offset="100%" stopColor="#b91c1c" />
         </linearGradient>
       </defs>
       <rect width="32" height="32" rx="9" fill="url(#logo-gradient)" />
@@ -29,7 +29,7 @@ export default function Logo() {
       <LogoMark />
       <span className="text-lg tracking-tight">
         <span className="font-semibold">netflix</span>
-        <span className="font-light text-accent-soft">graph</span>
+        <span className="font-light text-muted">graph</span>
       </span>
     </span>
   );

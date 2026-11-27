@@ -47,7 +47,7 @@ async function ProfileHeader({ params }: { params: Params }) {
         </Link>{" "}
         / perfil
       </p>
-      <h1 className="text-gradient mt-1 w-fit text-3xl font-bold tracking-tight">Usuario {id ?? "—"}</h1>
+      <h1 className="mt-1 text-3xl font-bold tracking-tight">Usuario {id ?? "—"}</h1>
       {user && (
         <p className="mt-1 text-sm text-muted">
           {user.positive_ratings.toLocaleString("es")} películas valoradas positivamente

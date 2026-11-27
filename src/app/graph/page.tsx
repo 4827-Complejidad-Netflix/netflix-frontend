@@ -75,7 +75,7 @@ export default function GraphPage() {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-8">
       <div>
-        <h1 className="text-gradient w-fit text-3xl font-bold tracking-tight">Grafo G_B</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Grafo G_B</h1>
         <p className="mt-1 text-sm text-muted">
           Grafo bipartito usuario–película de MovieLens ml-latest-small. Cada arista es una valoración positiva.
         </p>

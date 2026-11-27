@@ -10,7 +10,7 @@ Frontend del proyecto Netflix, construido con [Next.js](https://nextjs.org). Con
 | `/movies`            | Catálogo con búsqueda por título, filtro por género, orden (popular, título, año) y paginación. Botón ♥ en cada póster para darle me gusta |
 | `/recommendations`   | *Para ti*: BFS de 3 niveles desde tus me gusta (likes → usuarios similares → candidatas), con el recuento de cada nivel, las recomendaciones principales y la lista completa de candidatas indicando desde qué likes se llegó a cada una |
 | `/users`             | Listado de usuarios con valoraciones positivas y buscador por ID                                         |
-| `/users/[id]`        | Perfil del usuario: recomendaciones calculadas con BFS sobre el grafo, el árbol BFS interactivo que las genera y las películas que le gustaron |
+| `/users/[id]`        | Perfil del usuario: recomendaciones de su comunidad UFDS (G_U sobre sus vecinos del BFS), el árbol BFS interactivo que las genera y las películas que le gustaron |
 | `/graph`             | Estadísticas del grafo: nodos, aristas, densidad y grado medio                                           |
 | `/graph/communities` | Detección de comunidades sobre una muestra de usuarios, con UFDS (umbral de Jaccard) o Kruskal (k grupos), visualizada con Cytoscape |
 

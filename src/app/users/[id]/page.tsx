@@ -4,61 +4,27 @@ import { Suspense } from "react";
 import ErrorState from "@/components/ErrorState";
 import BfsTree, { BfsTreeSkeleton } from "@/components/graph/BfsTree";
 import MovieGrid, { MovieGridSkeleton } from "@/components/movies/MovieGrid";
-import { api, type Graph, type Movie, type Recommendation, type User } from "@/lib/api";
+import { api, type CommunityRecommendations, type Graph, type Movie, type Recommendation, type User } from "@/lib/api";
 
 const LIKED_LIMIT = 24;
-/** Recomendaciones que se muestran: primero las candidatas del árbol BFS y luego el resto por score. */
 const RECOMMENDATIONS_LIMIT = 10;
-/** Recomendaciones que se piden al backend (su máximo) para conocer el score de las candidatas del árbol. */
-const RECOMMENDATIONS_FETCH = 50;
-// Hijos por nodo en el árbol BFS (el backend admite 1–5). Con 3 niveles salen 1 + 2 + 4 + 8 = 15 nodos:
-// como mucho 8 candidatas, así que todas caben entre las RECOMMENDATIONS_LIMIT recomendaciones.
-const BFS_BRANCHING = 2;
+// Hijos por nodo en el árbol BFS (el backend admite 1–5). Con 3 niveles salen 1 + 3 + 9 + 27 = 40 nodos.
+const BFS_BRANCHING = 3;
+/** Miembros de la comunidad que se enlazan sobre las recomendaciones. */
+const MEMBERS_SHOWN = 12;
 
 interface UserRecommendation {
   movie: Movie;
-  /** Usuarios similares que la valoraron; null si no está entre las que devuelve el backend. */
-  score: number | null;
-  /** Aparece como candidata (nivel 3) en el árbol BFS. */
+  score: number;
+  /** Aparece como candidata (nivel 3) en el árbol BFS de abajo. */
   inTree: boolean;
 }
+
+type Params = PageProps<"/users/[id]">["params"];
 
 function bfsTree(id: number): Promise<Graph> {
   return api.users.bfs(id, { depth: 3, branching: BFS_BRANCHING });
 }
-
-/** Candidatas del árbol BFS (que deben salir sí o sí) seguidas del resto de recomendaciones, hasta el límite. */
-async function userRecommendations(id: number): Promise<UserRecommendation[]> {
-  const [recommendations, graph] = await Promise.all([
-    api.users.recommendations(id, { limit: RECOMMENDATIONS_FETCH }),
-    bfsTree(id).catch(() => null),
-  ]);
-  const byMovie = new Map(recommendations.map((r) => [r.movie.id, r]));
-  const treeIds = [
-    ...new Set((graph?.nodes ?? []).filter((n) => n.kind === "movie" && n.level === 3).map((n) => n.ref)),
-  ];
-
-  const fromTree = await Promise.all(
-    treeIds.map(async (movieId): Promise<UserRecommendation | null> => {
-      const rec = byMovie.get(movieId);
-      if (rec) return { movie: rec.movie, score: rec.score, inTree: true };
-      const movie = await api.movies.get(movieId).catch(() => null);
-      return movie && { movie, score: null, inTree: true };
-    }),
-  );
-  const tree = fromTree
-    .filter((r): r is UserRecommendation => r !== null)
-    .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
-
-  const inTree = new Set(treeIds);
-  const rest = recommendations
-    .filter((r: Recommendation) => !inTree.has(r.movie.id))
-    .map((r) => ({ movie: r.movie, score: r.score, inTree: false }));
-
-  return [...tree, ...rest].slice(0, RECOMMENDATIONS_LIMIT);
-}
-
-type Params = PageProps<"/users/[id]">["params"];
 
 function parseId(raw: string): number | null {
   return /^\d+$/.test(raw) ? Number(raw) : null;
@@ -104,41 +70,102 @@ async function ProfileHeader({ params }: { params: Params }) {
   );
 }
 
+/** Quiénes forman la comunidad UFDS del usuario, o por qué se cae al BFS si queda aislado. */
+function CommunitySummary({ data, userId }: { data: CommunityRecommendations; userId: number }) {
+  const members = data.community.filter((u) => u !== userId);
+  const neighbours = data.pool.length - 1;
+  const theta = data.theta.toLocaleString("es");
+
+  if (members.length === 0) {
+    return (
+      <p className="rounded-xl border border-dashed border-border px-4 py-3 text-sm text-muted">
+        Con θ = {theta} ninguno de sus {neighbours} vecinos más cercanos tiene un Jaccard suficiente para unirse a
+        él: queda aislado en G_U. Se muestran las recomendaciones del BFS.
+      </p>
+    );
+  }
+
+  return (
+    <div className="rounded-r-xl border-l-2 border-accent bg-surface px-4 py-3 text-sm">
+      <p>
+        <span className="font-semibold">Comunidad UFDS de {members.length.toLocaleString("es")} usuarios</span>{" "}
+        <span className="text-muted">
+          entre sus {neighbours} vecinos más cercanos del BFS (θ = {theta}).
+        </span>
+      </p>
+      <p className="mt-2 flex flex-wrap gap-1.5">
+        {members.slice(0, MEMBERS_SHOWN).map((u) => (
+          <Link
+            key={u}
+            href={`/users/${u}`}
+            className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted hover:border-accent/60 hover:text-foreground"
+          >
+            U{u}
+          </Link>
+        ))}
+        {members.length > MEMBERS_SHOWN && (
+          <span className="px-1 text-xs text-muted">y {members.length - MEMBERS_SHOWN} más</span>
+        )}
+      </p>
+    </div>
+  );
+}
+
 async function Recommendations({ params }: { params: Params }) {
   const id = parseId((await params).id);
   if (id === null) return null;
 
-  let recommendations: UserRecommendation[];
+  let data: CommunityRecommendations;
+  let bfsRecommendations: Recommendation[] = [];
+  let graph: Graph | null;
   try {
-    recommendations = await userRecommendations(id);
+    [data, graph] = await Promise.all([
+      api.users.communityRecommendations(id, { limit: RECOMMENDATIONS_LIMIT }),
+      bfsTree(id).catch(() => null),
+    ]);
+    // Aislado en G_U (o su comunidad no aporta nada nuevo): se vuelve al BFS.
+    if (data.recommendations.length === 0) {
+      bfsRecommendations = await api.users.recommendations(id, { limit: RECOMMENDATIONS_LIMIT });
+    }
   } catch (error) {
     return <ErrorState error={error} title="No se pudieron cargar las recomendaciones" />;
   }
 
-  if (recommendations.length === 0) {
-    return <p className="text-sm text-muted">El BFS no encontró películas candidatas para este usuario.</p>;
-  }
+  const fromCommunity = data.recommendations.length > 0;
+  const treeIds = new Set(
+    (graph?.nodes ?? []).filter((n) => n.kind === "movie" && n.level === 3).map((n) => n.ref),
+  );
+  const items: UserRecommendation[] = (fromCommunity ? data.recommendations : bfsRecommendations).map((r) => ({
+    movie: r.movie,
+    score: r.score,
+    inTree: treeIds.has(r.movie.id),
+  }));
 
   return (
-    <MovieGrid
-      items={recommendations}
-      movie={(r) => r.movie}
-      detail={(r) => (
-        <>
-          {r.score !== null && (
+    <div className="flex flex-col gap-4">
+      <CommunitySummary data={data} userId={id} />
+      {items.length === 0 ? (
+        <p className="text-sm text-muted">El BFS no encontró películas candidatas para este usuario.</p>
+      ) : (
+        <MovieGrid
+          items={items}
+          movie={(r) => r.movie}
+          detail={(r) => (
             <>
               <span className="font-semibold text-foreground">{r.score}</span>{" "}
-              {r.score === 1 ? "usuario similar la valoró" : "usuarios similares la valoraron"}
+              {fromCommunity
+                ? r.score === 1
+                  ? "miembro de su comunidad la valoró"
+                  : "miembros de su comunidad la valoraron"
+                : r.score === 1
+                  ? "usuario similar la valoró"
+                  : "usuarios similares la valoraron"}
+              {r.inTree && <span className="text-accent-soft"> · en el árbol BFS</span>}
             </>
           )}
-          {r.inTree && (
-            <span className="text-accent-soft">
-              {r.score !== null && " · "}en el árbol BFS
-            </span>
-          )}
-        </>
+        />
       )}
-    />
+    </div>
   );
 }
 
@@ -202,7 +229,7 @@ export default function UserPage({ params }: PageProps<"/users/[id]">) {
 
       <Section
         title="Recomendaciones"
-        subtitle={`BFS de 3 niveles en G_B: usuario → sus películas → usuarios similares → películas candidatas. Primero las candidatas del árbol BFS de abajo y luego el resto, hasta ${RECOMMENDATIONS_LIMIT}. El score es cuántos usuarios similares la valoraron positivamente.`}
+        subtitle="Su comunidad UFDS: se toman los vecinos más cercanos del BFS (nivel 2), se proyecta G_U por Jaccard y Union-Find une a los que superan el umbral θ. Se recomienda lo que más valoraron los miembros de la comunidad del usuario y que él aún no tiene."
       >
         <Suspense fallback={<MovieGridSkeleton count={RECOMMENDATIONS_LIMIT} />}>
           <Recommendations params={params} />

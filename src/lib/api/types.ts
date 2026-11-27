@@ -32,6 +32,17 @@ export interface Recommendation {
   score: number;
 }
 
+export interface CommunityRecommendations {
+  /** Umbral de Jaccard con el que se proyectó G_U. */
+  theta: number;
+  /** El usuario y los vecinos del BFS (nivel 2) con más películas en común, sobre los que se proyecta G_U. */
+  pool: number[];
+  /** Comunidad UFDS del usuario dentro del pool (lo incluye). */
+  community: number[];
+  /** `score` = nº de miembros de la comunidad que la valoraron positivamente. */
+  recommendations: Recommendation[];
+}
+
 export interface CandidateVia {
   /** Película con "me gusta" desde la que se llegó a la candidata. */
   movie: Movie;

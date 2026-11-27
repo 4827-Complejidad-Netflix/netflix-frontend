@@ -1,5 +1,6 @@
 import type {
   Communities,
+  CommunityRecommendations,
   CommunitiesParams,
   Graph,
   GraphStats,
@@ -74,6 +75,12 @@ export const api = {
       request<User>(`/users/${id}`, params, init),
     recommendations: (id: number, params?: { limit?: number }, init?: RequestInit) =>
       request<Recommendation[]>(`/users/${id}/recommendations`, params, init),
+    /** Recomendaciones de la comunidad UFDS del usuario (G_U proyectado sobre sus vecinos del BFS). */
+    communityRecommendations: (
+      id: number,
+      params?: { theta?: number; pool_size?: number; limit?: number },
+      init?: RequestInit,
+    ) => request<CommunityRecommendations>(`/users/${id}/community-recommendations`, params, init),
     bfs: (id: number, params?: { depth?: number; branching?: number }, init?: RequestInit) =>
       request<Graph>(`/users/${id}/bfs`, params, init),
   },

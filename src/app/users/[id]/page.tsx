@@ -4,12 +4,59 @@ import { Suspense } from "react";
 import ErrorState from "@/components/ErrorState";
 import BfsTree, { BfsTreeSkeleton } from "@/components/graph/BfsTree";
 import MovieGrid, { MovieGridSkeleton } from "@/components/movies/MovieGrid";
-import { api, type Graph, type Recommendation, type User } from "@/lib/api";
+import { api, type Graph, type Movie, type Recommendation, type User } from "@/lib/api";
 
 const LIKED_LIMIT = 24;
-const RECOMMENDATIONS_LIMIT = 12;
-// Hijos por nodo en el árbol BFS (el backend admite 1–5). Con 3 niveles salen 1 + 3 + 9 + 27 = 40 nodos.
-const BFS_BRANCHING = 3;
+/** Recomendaciones que se muestran: primero las candidatas del árbol BFS y luego el resto por score. */
+const RECOMMENDATIONS_LIMIT = 10;
+/** Recomendaciones que se piden al backend (su máximo) para conocer el score de las candidatas del árbol. */
+const RECOMMENDATIONS_FETCH = 50;
+// Hijos por nodo en el árbol BFS (el backend admite 1–5). Con 3 niveles salen 1 + 2 + 4 + 8 = 15 nodos:
+// como mucho 8 candidatas, así que todas caben entre las RECOMMENDATIONS_LIMIT recomendaciones.
+const BFS_BRANCHING = 2;
+
+interface UserRecommendation {
+  movie: Movie;
+  /** Usuarios similares que la valoraron; null si no está entre las que devuelve el backend. */
+  score: number | null;
+  /** Aparece como candidata (nivel 3) en el árbol BFS. */
+  inTree: boolean;
+}
+
+function bfsTree(id: number): Promise<Graph> {
+  return api.users.bfs(id, { depth: 3, branching: BFS_BRANCHING });
+}
+
+/** Candidatas del árbol BFS (que deben salir sí o sí) seguidas del resto de recomendaciones, hasta el límite. */
+async function userRecommendations(id: number): Promise<UserRecommendation[]> {
+  const [recommendations, graph] = await Promise.all([
+    api.users.recommendations(id, { limit: RECOMMENDATIONS_FETCH }),
+    bfsTree(id).catch(() => null),
+  ]);
+  const byMovie = new Map(recommendations.map((r) => [r.movie.id, r]));
+  const treeIds = [
+    ...new Set((graph?.nodes ?? []).filter((n) => n.kind === "movie" && n.level === 3).map((n) => n.ref)),
+  ];
+
+  const fromTree = await Promise.all(
+    treeIds.map(async (movieId): Promise<UserRecommendation | null> => {
+      const rec = byMovie.get(movieId);
+      if (rec) return { movie: rec.movie, score: rec.score, inTree: true };
+      const movie = await api.movies.get(movieId).catch(() => null);
+      return movie && { movie, score: null, inTree: true };
+    }),
+  );
+  const tree = fromTree
+    .filter((r): r is UserRecommendation => r !== null)
+    .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+
+  const inTree = new Set(treeIds);
+  const rest = recommendations
+    .filter((r: Recommendation) => !inTree.has(r.movie.id))
+    .map((r) => ({ movie: r.movie, score: r.score, inTree: false }));
+
+  return [...tree, ...rest].slice(0, RECOMMENDATIONS_LIMIT);
+}
 
 type Params = PageProps<"/users/[id]">["params"];
 
@@ -61,9 +108,9 @@ async function Recommendations({ params }: { params: Params }) {
   const id = parseId((await params).id);
   if (id === null) return null;
 
-  let recommendations: Recommendation[];
+  let recommendations: UserRecommendation[];
   try {
-    recommendations = await api.users.recommendations(id, { limit: RECOMMENDATIONS_LIMIT });
+    recommendations = await userRecommendations(id);
   } catch (error) {
     return <ErrorState error={error} title="No se pudieron cargar las recomendaciones" />;
   }
@@ -78,8 +125,17 @@ async function Recommendations({ params }: { params: Params }) {
       movie={(r) => r.movie}
       detail={(r) => (
         <>
-          <span className="font-semibold text-foreground">{r.score}</span>{" "}
-          {r.score === 1 ? "usuario similar la valoró" : "usuarios similares la valoraron"}
+          {r.score !== null && (
+            <>
+              <span className="font-semibold text-foreground">{r.score}</span>{" "}
+              {r.score === 1 ? "usuario similar la valoró" : "usuarios similares la valoraron"}
+            </>
+          )}
+          {r.inTree && (
+            <span className="text-accent-soft">
+              {r.score !== null && " · "}en el árbol BFS
+            </span>
+          )}
         </>
       )}
     />
@@ -92,7 +148,7 @@ async function BfsTreeSection({ params }: { params: Params }) {
 
   let graph: Graph;
   try {
-    graph = await api.users.bfs(id, { depth: 3, branching: BFS_BRANCHING });
+    graph = await bfsTree(id);
   } catch (error) {
     return <ErrorState error={error} title="No se pudo cargar el árbol BFS" />;
   }
@@ -146,7 +202,7 @@ export default function UserPage({ params }: PageProps<"/users/[id]">) {
 
       <Section
         title="Recomendaciones"
-        subtitle="BFS de 3 niveles en G_B: usuario → sus películas → usuarios similares → películas candidatas. El score es cuántos usuarios similares la valoraron positivamente."
+        subtitle={`BFS de 3 niveles en G_B: usuario → sus películas → usuarios similares → películas candidatas. Primero las candidatas del árbol BFS de abajo y luego el resto, hasta ${RECOMMENDATIONS_LIMIT}. El score es cuántos usuarios similares la valoraron positivamente.`}
       >
         <Suspense fallback={<MovieGridSkeleton count={RECOMMENDATIONS_LIMIT} />}>
           <Recommendations params={params} />
